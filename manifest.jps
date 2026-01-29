@@ -1,0 +1,253 @@
+type: install
+version: 1.9
+id: brawlgpt-app
+name: BrawlGPT - AI Brawl Stars Coach
+categories:
+  - apps/dev-and-admin-tools
+  - apps/popular
+  - apps/content-management
+homepage: https://github.com/yourusername/BrawlGPT
+logo: https://raw.githubusercontent.com/yourusername/BrawlGPT/main/logo.png
+description: |
+  AI-powered coaching and statistics platform for Brawl Stars players.
+  
+  Features:
+  - Player search and detailed statistics
+  - AI-powered coaching with personalized tips
+  - Battle log analysis and player interaction graph
+  - Meta analysis and trend detection
+  - Fast performance with Redis caching
+  
+  Tech Stack: FastAPI, React 19, PostgreSQL, Redis
+
+baseUrl: https://raw.githubusercontent.com/yourusername/BrawlGPT/main
+
+settings:
+  fields:
+    - type: string
+      name: brawlApiKey
+      caption: Brawl Stars API Key
+      placeholder: Your API key from developer.brawlstars.com
+      required: true
+      
+    - type: string
+      name: openrouterApiKey
+      caption: OpenRouter API Key
+      placeholder: Your API key from openrouter.ai
+      required: true
+      inputType: password
+      
+    - type: string
+      name: jwtSecret
+      caption: JWT Secret Key
+      placeholder: Minimum 32 characters secret key
+      required: true
+      inputType: password
+      default: ${fn.password(32)}
+      
+    - type: string
+      name: customDomain
+      caption: Custom Domain (optional)
+      placeholder: brawlgpt.yourdomain.com
+      required: false
+
+nodes:
+  # PostgreSQL Database
+  - nodeType: dockerengine
+    nodeGroup: postgres
+    displayName: PostgreSQL Database
+    count: 1
+    fixedCloudlets: 1
+    flexibleCloudlets: 4
+    env:
+      POSTGRES_USER: brawl_user
+      POSTGRES_PASSWORD: ${fn.password(16)}
+      POSTGRES_DB: brawlgpt_db
+    volumes:
+      - /var/lib/postgresql/data
+    docker:
+      image: postgres:15-alpine
+      cmd: postgres
+    restart: always
+
+  # Redis Cache
+  - nodeType: dockerengine
+    nodeGroup: redis
+    displayName: Redis Cache
+    count: 1
+    fixedCloudlets: 1
+    flexibleCloudlets: 2
+    volumes:
+      - /data
+    docker:
+      image: redis:7-alpine
+      cmd: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: always
+
+  # Backend API
+  - nodeType: dockerengine
+    nodeGroup: backend
+    displayName: Backend API
+    count: 1
+    fixedCloudlets: 1
+    flexibleCloudlets: 8
+    env:
+      BRAWL_API_KEY: ${settings.brawlApiKey}
+      OPENROUTER_API_KEY: ${settings.openrouterApiKey}
+      SECRET_KEY: ${settings.jwtSecret}
+      DATABASE_URL: postgresql+asyncpg://brawl_user:${nodes.postgres.env.POSTGRES_PASSWORD}@${nodes.postgres.address}:5432/brawlgpt_db
+      REDIS_URL: redis://${nodes.redis.address}:6379/0
+      ALLOWED_ORIGINS: https://${env.domain},http://${env.domain}
+      LOG_level: INFO
+      DEBUG: false
+    volumes:
+      - /app/logs
+    docker:
+      image: python:3.12-slim
+      volumes:
+        - ${baseUrl}/backend:/app
+      cmd: |
+        sh -c "cd /app && \
+        apt-get update && apt-get install -y --no-install-recommends build-essential && \
+        pip install --no-cache-dir -r requirements.txt && \
+        uvicorn main:app --host 0.0.0.0 --port 8000"
+    restart: always
+
+  # Frontend
+  - nodeType: dockerengine
+    nodeGroup: frontend
+    displayName: Frontend Web UI
+    count: 1
+    fixedCloudlets: 1
+    flexibleCloudlets: 4
+    env:
+      VITE_API_URL: https://${env.domain}
+    docker:
+      image: node:20-alpine
+      volumes:
+        - ${baseUrl}/frontend:/app
+      cmd: |
+        sh -c "cd /app && \
+        npm ci && \
+        npm run build && \
+        npm install -g serve && \
+        serve -s dist -l 80"
+    restart: always
+
+  # Nginx Reverse Proxy
+  - nodeType: nginx
+    nodeGroup: nginx
+    displayName: Web Server
+    count: 1
+    fixedCloudlets: 1
+    flexibleCloudlets: 2
+    cloudlets: 4
+
+onInstall:
+  - log: "Starting BrawlGPT installation..."
+  
+  - log: "Waiting for PostgreSQL to be ready..."
+  - cmd[postgres]: |
+      until pg_isready -U brawl_user -d brawlgpt_db; do
+        sleep 2
+      done
+  
+  - log: "Initializing database schema..."
+  - cmd[backend]: |
+      cd /app
+      # Database migrations will run automatically on app startup
+      echo "Database will be initialized on backend startup"
+  
+  - log: "Configuring Nginx reverse proxy..."
+  - cmd[nginx]: |
+      cat > /etc/nginx/conf.d/brawlgpt.conf <<'EOF'
+      upstream backend {
+          server ${nodes.backend.address}:8000;
+      }
+      
+      upstream frontend {
+          server ${nodes.frontend.address}:80;
+      }
+      
+      server {
+          listen 80;
+          server_name ${env.domain};
+          client_max_body_size 50M;
+          
+          # Frontend
+          location / {
+              proxy_pass http://frontend;
+              proxy_http_version 1.1;
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection 'upgrade';
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+              proxy_cache_bypass $http_upgrade;
+          }
+          
+          # Backend API
+          location /api/ {
+              proxy_pass http://backend;
+              proxy_http_version 1.1;
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection 'upgrade';
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+              proxy_cache_bypass $http_upgrade;
+          }
+          
+          # Health checks
+          location /health {
+              proxy_pass http://backend;
+              proxy_http_version 1.1;
+              proxy_set_header Host $host;
+          }
+      }
+      EOF
+      nginx -s reload
+  
+  - if (${settings.customDomain:}):
+      - api: environment.binder.BindSSL
+        envName: ${env.name}
+        certType: CUSTOM
+        extDomains: ${settings.customDomain}
+  
+  - log: "BrawlGPT installation completed!"
+  - log: "Access your application at: https://${env.domain}"
+
+success: |
+  # 🎮 BrawlGPT Successfully Deployed!
+  
+  Your AI-powered Brawl Stars coaching platform is ready!
+  
+  ## Access Information
+  - **Application URL**: https://${env.domain}
+  - **API Documentation**: https://${env.domain}/docs
+  - **Health Check**: https://${env.domain}/health
+  
+  ## Next Steps
+  1. Visit the application URL to start using BrawlGPT
+  2. Search for any Brawl Stars player by their tag
+  3. Get AI-powered coaching and insights
+  
+  ## Database Information
+  - **PostgreSQL**: Running on ${nodes.postgres.address}:5432
+  - **Redis Cache**: Running on ${nodes.redis.address}:6379
+  - **Database Name**: brawlgpt_db
+  - **Database User**: brawl_user
+  
+  ## Configuration
+  Your API keys have been securely configured:
+  - Brawl Stars API: Configured ✓
+  - OpenRouter API: Configured ✓
+  - JWT Secret: Auto-generated ✓
+  
+  ## Support
+  - Documentation: https://github.com/yourusername/BrawlGPT
+  - Issues: https://github.com/yourusername/BrawlGPT/issues
+  
+  Enjoy your BrawlGPT experience! 🚀
