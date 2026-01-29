@@ -83,7 +83,7 @@ class AIAgent:
         )
         self.brawl_client = brawl_client
         # Cost-effective model for gaming insights
-        self.model = "anthropic/claude-sonnet-4.5"
+        self.model = "moonshotai/kimi-k2.5"
         self.tools_enabled = True
 
     def _extract_player_summary(self, player_data: dict[str, Any]) -> dict[str, Any]:

@@ -21,7 +21,7 @@ class MetaAnalyst:
             base_url="https://openrouter.ai/api/v1",
             api_key=api_key
         )
-        self.model = "google/gemini-3-flash-preview" # Efficient, fast model
+        self.model = "moonshotai/kimi-k2.5" # Efficient, fast model
 
     async def analyze_meta_report(self, meta_report: dict) -> str:
         """

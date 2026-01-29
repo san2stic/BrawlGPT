@@ -1,140 +1,144 @@
-# Environment Variables Configuration
+# Environment Configuration Guide
 
-## Required Variables
+## 🔑 API Keys Required
 
-### SECRET_KEY (CRITICAL)
-**Type:** String (minimum 32 characters)  
-**Required:** YES  
-**Purpose:** JWT token signing for authentication
+### 1. Brawl Stars API Key
 
-> [!CAUTION]
-> The application will **NOT start** without this variable. There is no default value for security reasons.
+**⚠️ IMPORTANT: Générez une nouvelle clé SANS restriction IP**
 
-**How to generate:**
+1. Allez sur [https://developer.brawlstars.com/](https://developer.brawlstars.com/)
+2. Connectez-vous avec votre compte Supercell
+3. Créez une nouvelle clé API
+4. **IMPORTANT**: Laissez le champ IP vide ou mettez `0.0.0.0/0` pour permettre toutes les IPs
+5. Copiez la clé générée
+
+**Pourquoi?** Votre clé actuelle est restreinte à l'IP `104.28.208.115` ce qui cause les erreurs "Load failed" quand vous vous connectez depuis une autre IP ou via Jelastic.
+
+### 2. OpenRouter API Key
+
+1. Allez sur [https://openrouter.ai/](https://openrouter.ai/)
+2. Créez un compte / connectez-vous
+3. Allez dans "Keys" et créez une nouvelle clé
+4. Copiez la clé (commence par `sk-or-v1-`)
+
+### 3. JWT Secret
+
+Un secret aléatoire pour signer les tokens JWT (minimum 32 caractères).
+Vous pouvez en générer un avec:
 ```bash
-# Python
-python -c "import secrets; print(secrets.token_urlsafe(32))"
-
-# OpenSSL
-openssl rand -base64 32
+openssl rand -hex 32
 ```
 
-### BRAWL_API_KEY
-**Type:** String  
-**Required:** YES  
-**Purpose:** Brawl Stars API authentication
+## 📝 Configuration des fichiers
 
-Get your API key from: https://developer.brawlstars.com
+### Backend (.env)
 
-### OPENROUTER_API_KEY
-**Type:** String  
-**Required:** YES  
-**Purpose:** AI model access via OpenRouter
+Créez ou modifiez `backend/.env`:
 
-Get your API key from: https://openrouter.ai/keys
+```env
+# Security Configuration
+SECRET_KEY=your-jwt-secret-here-min-32-chars
 
-## Database Configuration
+# Brawl Stars API Configuration (NOUVELLE CLÉ SANS RESTRICTION IP)
+BRAWL_API_KEY=your-new-unrestricted-api-key-here
 
-### DATABASE_URL
-**Type:** Connection String  
-**Required:** YES  
-**Default:** `postgresql+asyncpg://postgres:postgres@localhost:5432/brawlgpt_db`  
-**Purpose:** PostgreSQL database connection
+# OpenRouter API Key
+OPENROUTER_API_KEY=sk-or-v1-your-key-here
 
-**Format:**
-```
-postgresql+asyncpg://user:password@host:port/database
-```
+# CORS Allowed Origins (ajoutez votre domaine Jelastic)
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,https://your-jelastic-domain.com
 
-## Redis Configuration
+# Database (sera configuré automatiquement par Docker)
+DATABASE_URL=postgresql+asyncpg://brawl_user:brawl_password@postgres:5432/brawlgpt_db
 
-### REDIS_URL
-**Type:** Connection String  
-**Required:** NO  
-**Default:** `redis://localhost:6379/0`  
-**Purpose:** Distributed caching
-
-### REDIS_ENABLED
-**Type:**Boolean  
-**Required:** NO  
-**Default:** `true`  
-**Purpose:** Enable/disable Redis caching (falls back to in-memory if disabled)
-
-## Example .env File
-
-```bash
-# ===== REQUIRED VARIABLES =====
-
-# Secret for JWT (GENERATE A SECURE VALUE!)
-SECRET_KEY=your-secure-32-char-secret-key-here-change-this
-
-# Brawl Stars API
-BRAWL_API_KEY=your_brawl_stars_api_key_here
-
-# OpenRouter AI
-OPENROUTER_API_KEY=your_openrouter_api_key_here
-
-# Database
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/brawlgpt_db
-
-# ===== OPTIONAL VARIABLES =====
-
-# Redis
+# Redis (sera configuré automatiquement par Docker)
 REDIS_URL=redis://redis:6379/0
-REDIS_ENABLED=true
-
-# CORS Origins (comma-separated)
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
-
-# Rate Limiting
-RATE_LIMIT_PLAYER=30/minute
-RATE_LIMIT_CHAT=10/minute
 
 # Logging
 LOG_LEVEL=INFO
-LOG_FORMAT=json
-
-# AI Configuration
-AI_MODEL=anthropic/claude-sonnet-4.5
-AI_MAX_TOKENS=2000
-AI_TEMPERATURE=0.7
-
-# Feature Flags
-ENABLE_META_CRAWLER=true
-ENABLE_PROGRESSION_TRACKING=true
-ENABLE_AGENT_TOOLS=true
+DEBUG=false
 ```
 
-## Docker Setup
+### Frontend (.env)
 
-When using Docker Compose, create a `.env` file in the project root with the variables above. The docker-compose.yml file will automatically load them.
+Créez ou modifiez `frontend/.env`:
 
-## Production Deployment
+```env
+VITE_API_URL=http://localhost:8000
+```
 
-> [!IMPORTANT]
-> **Never commit your `.env` file to version control!**
-
-For production:
-1. Generate a strong SECRET_KEY (different from development)
-2. Use production database credentials
-3. Set appropriate CORS origins
-4. Consider setting LOG_FORMAT=json for better monitoring
-
-## Verification
-
-To verify your environment is configured correctly:
+## 🚀 Déploiement Local (Docker)
 
 ```bash
-# Backend health check
-curl http://localhost:8000/health/detailed
+# Copier le fichier .env
+cp backend/.env.example backend/.env
+# Éditer avec vos clés
+nano backend/.env
 
-# Should return:
-{
-  "status": "healthy",
-  "services": {
-    "database": "healthy",
-    "redis": "healthy",
-    "brawl_stars_api": "configured"
-  }
-}
+# Lancer l'application
+docker compose up -d
+
+# Vérifier les logs
+docker compose logs -f backend
+```
+
+## ☁️ Déploiement Jelastic
+
+Lors de l'installation via Jelastic:
+
+1. **Brawl Stars API Key**: Utilisez votre NOUVELLE clé sans restriction IP
+2. **OpenRouter API Key**: Votre clé OpenRouter
+3. **JWT Secret**: Laissez le défaut auto-généré ou utilisez le vôtre
+
+Le manifest Jelastic configurera automatiquement:
+- PostgreSQL avec credentials sécurisés
+- Redis pour le cache
+- Nginx comme reverse proxy
+- SSL automatique
+
+## 🔧 Vérification
+
+Après déploiement, testez:
+
+```bash
+# Health check simple
+curl https://your-domain.com/health
+
+# Health check détaillé
+curl https://your-domain.com/health/detailed
+```
+
+## ⚠️ Sécurité
+
+**CE QUI A ÉTÉ RETIRÉ:**
+- ✅ Aucune restriction IP dans le backend
+- ✅ Pas de middleware IP whitelist
+- ✅ Pas de validation d'IP dans les routes
+
+**CE QUI RESTE POUR LA SÉCURITÉ:**
+- ✅ JWT pour l'authentification utilisateur
+- ✅ Rate limiting sur les endpoints API
+- ✅ CORS configuré pour limiter les origines
+- ✅ Passwords hachés avec Argon2
+- ✅ Validation des tokens JWT
+
+**IMPORTANT**: La restriction IP était dans votre BRAWL_API_KEY elle-même. En générant une nouvelle clé sans restriction IP, vous résolvez le problème "Load failed".
+
+## 🐛 Dépannage
+
+### "Load failed" lors du login
+
+**Cause**: Votre ancienne clé API Brawl Stars est restreinte à l'IP `104.28.208.115`
+
+**Solution**: 
+1. Générez une NOUVELLE clé API sur developer.brawlstars.com
+2. Laissez le champ IP vide ou mettez `0.0.0.0/0`
+3. Mettez à jour `BRAWL_API_KEY` dans votre `.env`
+4. Redémarrez: `docker compose restart backend`
+
+### Erreurs CORS
+
+Ajoutez votre domaine Jelastic dans `ALLOWED_ORIGINS`:
+```env
+ALLOWED_ORIGINS=http://localhost:5173,https://env-1234567.jelastic.infomaniak.com
 ```
