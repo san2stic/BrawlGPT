@@ -77,3 +77,10 @@ tmp/
 temp/
 *.tmp
 *.temp
+
+# Jelastic Deployment
+.env.jelastic
+jelastic-test/
+.jelastic/
+deploy-*.log
+jelastic-deployment.log
