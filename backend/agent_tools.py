@@ -106,6 +106,31 @@ AGENT_TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "get_map_meta",
+            "description": "Obtenir les meilleurs brawlers pour une map spécifique",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "map_name": {
+                        "type": "string",
+                        "description": "Nom de la map"
+                    },
+                    "mode": {
+                        "type": "string",
+                        "description": "Mode de jeu"
+                    },
+                    "top_n": {
+                        "type": "integer",
+                        "description": "Nombre de brawlers (défaut: 10)"
+                    }
+                },
+                "required": ["map_name", "mode"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_current_events",
             "description": "Obtenir les events actuellement en rotation avec les modes et maps actifs",
             "parameters": {
@@ -314,6 +339,40 @@ class AgentToolExecutor:
                     arguments.get("target_value"),
                     arguments.get("description", ""),
                     arguments.get("brawler_name")
+                )
+            
+            elif tool_name == "get_counter_picks":
+                return await self._get_counter_picks(
+                    arguments.get("brawler_name"),
+                    arguments.get("mode"),
+                    arguments.get("top_n", 5)
+                )
+            
+            elif tool_name == "analyze_enemy_team_counters":
+                return await self._analyze_enemy_team_counters(
+                    arguments.get("enemy_brawlers", []),
+                    arguments.get("mode")
+                )
+            
+            elif tool_name == "analyze_team_synergy":
+                return await self._analyze_team_synergy(
+                    arguments.get("brawlers", []),
+                    arguments.get("mode")
+                )
+            
+            elif tool_name == "suggest_third_brawler":
+                return await self._suggest_third_brawler(
+                    arguments.get("brawler1"),
+                    arguments.get("brawler2"),
+                    arguments.get("mode"),
+                    arguments.get("top_n", 5)
+                )
+            
+            elif tool_name == "get_map_meta":
+                return await self._get_map_meta(
+                    arguments.get("map_name"),
+                    arguments.get("mode"),
+                    arguments.get("top_n", 10)
                 )
 
             else:
@@ -734,3 +793,193 @@ class AgentToolExecutor:
                 "progress": f"{(current_value / target_value * 100):.1f}%" if target_value > 0 else "0%"
             }
         }
+    async def _get_counter_picks(
+        self,
+        brawler_name: str,
+        mode: Optional[str] = None,
+        top_n: int = 5
+    ) -> dict:
+        """Get counter-picks for a specific brawler."""
+        if not brawler_name:
+            return {"error": "Brawler name required"}
+        
+        try:
+            from services.counter_pick_service import CounterPickService
+            
+            counter_service = CounterPickService()
+            if self.brawl_client:
+                counter_service.set_brawl_api(self.brawl_client)
+            
+            counters = await counter_service.get_counters(
+                self.db,
+                brawler_name,
+                mode=mode,
+                top_n=top_n
+            )
+            
+            if not counters:
+                return {
+                    "brawler": brawler_name,
+                    "mode": mode or "global",
+                    "counters": [],
+                    "message": f"Pas de données de matchup disponibles pour {brawler_name}"
+                }
+            
+            return {
+                "brawler": brawler_name,
+                "mode": mode or "global",
+                "counters": [c.to_dict() for c in counters],
+                "count": len(counters)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting counter picks for {brawler_name}: {e}")
+            return {
+                "error": str(e),
+                "brawler": brawler_name
+            }
+    
+    async def _analyze_enemy_team_counters(
+        self,
+        enemy_brawlers: list[str],
+        mode: Optional[str] = None
+    ) -> dict:
+        """Analyze enemy team composition and suggest counters."""
+        if not enemy_brawlers or len(enemy_brawlers) == 0:
+            return {"error": "Enemy brawlers list required"}
+        
+        if len(enemy_brawlers) > 3:
+            return {"error": "Maximum 3 enemy brawlers allowed"}
+        
+        try:
+            from services.counter_pick_service import CounterPickService
+            
+            counter_service = CounterPickService()
+            if self.brawl_client:
+                counter_service.set_brawl_api(self.brawl_client)
+            
+            analysis = await counter_service.analyze_enemy_team(
+                self.db,
+                enemy_brawlers,
+                mode=mode
+            )
+            
+            return {
+                "enemy_team": analysis.enemy_team,
+                "recommended_picks": [p.to_dict() for p in analysis.recommended_picks],
+                "synergy_score": analysis.synergy_score,
+                "mode": analysis.mode or "global",
+                "analysis": f"Composition recommandée avec un score de synergie de {analysis.synergy_score:.1%}"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing enemy team {enemy_brawlers}: {e}")
+            return {
+                "error": str(e),
+                "enemy_team": enemy_brawlers
+            }
+    async def _analyze_team_synergy(
+        self,
+        brawlers: list[str],
+        mode: Optional[str] = None
+    ) -> dict:
+        """Analyze the synergy of a team composition."""
+        if not brawlers or len(brawlers) < 2:
+            return {"error": "At least 2 brawlers required"}
+        
+        if len(brawlers) > 3:
+            return {"error": "Maximum 3 brawlers allowed"}
+        
+        try:
+            from services.team_synergy_service import TeamSynergyService
+            
+            synergy_service = TeamSynergyService()
+            if self.brawl_client:
+                synergy_service.set_brawl_api(self.brawl_client)
+            
+            analysis = await synergy_service.analyze_synergy(
+                self.db,
+                brawlers,
+                mode=mode
+            )
+            
+            return analysis.to_dict()
+            
+        except Exception as e:
+            logger.error(f"Error analyzing team synergy {brawlers}: {e}")
+            return {
+                "error": str(e),
+                "brawlers": brawlers
+            }
+    
+    async def _suggest_third_brawler(
+        self,
+        brawler1: str,
+        brawler2: str,
+        mode: Optional[str] = None,
+        top_n: int = 5
+    ) -> dict:
+        """Suggest the best third brawler to complete a team."""
+        if not brawler1 or not brawler2:
+            return {"error": "Two brawlers required"}
+        
+        try:
+            from services.team_synergy_service import TeamSynergyService
+            
+            synergy_service = TeamSynergyService()
+            if self.brawl_client:
+                synergy_service.set_brawl_api(self.brawl_client)
+            
+            suggestions = await synergy_service.suggest_third_brawler(
+                self.db,
+                brawler1,
+                brawler2,
+                mode=mode,
+                top_n=top_n
+            )
+            
+            return {
+                "current_team": [brawler1, brawler2],
+                "suggestions": [s.to_dict() for s in suggestions],
+                "mode": mode or "global"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error suggesting third brawler for {brawler1}+{brawler2}: {e}")
+            return {
+                "error": str(e),
+                "current_team": [brawler1, brawler2]
+            }
+    async def _get_map_meta(
+        self,
+        map_name: str,
+        mode: str,
+        top_n: int = 10
+    ) -> dict:
+        """Get the best brawlers for a specific map."""
+        if not map_name or not mode:
+            return {"error": "Map name and mode are required"}
+        
+        try:
+            from services.map_intelligence_service import MapIntelligenceService
+            
+            map_service = MapIntelligenceService()
+            if self.brawl_client:
+                map_service.set_brawl_api(self.brawl_client)
+            
+            meta = await map_service.get_map_meta(
+                self.db,
+                map_name,
+                mode,
+                top_n=top_n
+            )
+            
+            return meta.to_dict()
+            
+        except Exception as e:
+            logger.error(f"Error getting map meta for {map_name} ({mode}): {e}")
+            return {
+                "error": str(e),
+                "map_name": map_name,
+                "mode": mode
+            }

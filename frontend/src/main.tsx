@@ -1,16 +1,17 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import "./index.css";
-import App from "./App";
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import './styles/themes.css'
+import App from './App.tsx'
+import { ThemeProvider } from './context/ThemeContext.tsx'
+import { ToastProvider } from './context/ToastContext.tsx'
 
-const rootElement = document.getElementById("root");
-
-if (!rootElement) {
-  throw new Error("Failed to find root element");
-}
-
-createRoot(rootElement).render(
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
-  </StrictMode>
-);
+    <ThemeProvider>
+      <ToastProvider>
+        <App />
+      </ToastProvider>
+    </ThemeProvider>
+  </StrictMode>,
+)

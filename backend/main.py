@@ -10,9 +10,9 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any, Callable, Optional
 
-from fastapi import FastAPI, Request, Response, HTTPException, Depends
+from fastapi import FastAPI, Request, Response, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -46,6 +46,7 @@ from routers import users, crawler, scheduler
 # derived exceptions
 from exceptions import BrawlGPTError, InvalidTagError
 from models import ChatRequest
+from pydantic import BaseModel
 
 # Initialize logging FIRST
 setup_logging(
@@ -83,6 +84,10 @@ trend_detector = TrendDetectorService(
     interval_hours=settings().trend_detection_interval_hours,
     min_confidence=settings().ai_min_confidence_threshold
 )
+
+# WebSocket Connection Manager
+from websocket_manager import ConnectionManager
+ws_manager = ConnectionManager()
 
 # Rate Limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -166,6 +171,11 @@ def create_application() -> FastAPI:
     app.include_router(users.router)
     app.include_router(crawler.router)
     app.include_router(scheduler.router)
+    
+    # Import and register clubs router
+    from routers import clubs
+    app.include_router(clubs.router)
+    clubs.club_service.set_brawl_api(brawl_client)
     
     return app
 
@@ -441,6 +451,239 @@ async def chat_with_agent(
     except Exception as e:
         logger.error(f"Chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/chat/stream")
+@limiter.limit(settings().rate_limit_chat)
+async def chat_stream(
+    request: Request,
+    chat_request: ChatRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Stream chat responses using Server-Sent Events (SSE)."""
+    try:
+        messages = [m.model_dump() for m in chat_request.messages]
+        
+        async def generate():
+            try:
+                async for chunk in ai_agent.chat_stream(
+                    messages, 
+                    chat_request.player_context, 
+                    db=db
+                ):
+                    # SSE format: data: <json>\n\n
+                    yield f"data: {json.dumps({'content': chunk})}\n\n"
+            except Exception as e:
+                logger.error(f"Streaming error: {e}")
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        
+        return StreamingResponse(
+            generate(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no"  # Disable nginx buffering
+            }
+        )
+    except Exception as e:
+        logger.error(f"Chat stream error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# COUNTER-PICK ENDPOINTS
+# =============================================================================
+
+class TeamCounterRequest(BaseModel):
+    """Request model for team counter analysis"""
+    enemy_brawlers: list[str]
+    mode: Optional[str] = None
+
+
+@app.get("/api/counters/{brawler_name}")
+async def get_counter_picks(
+    brawler_name: str,
+    mode: Optional[str] = None,
+    top_n: int = 5,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get the best counter-picks for a specific brawler.
+    
+    Args:
+        brawler_name: Name of the brawler to counter
+        mode: Game mode (optional, defaults to global)
+        top_n: Number of counters to return
+    """
+    try:
+        from services.counter_pick_service import CounterPickService
+        
+        counter_service = CounterPickService()
+        if brawl_client:
+            counter_service.set_brawl_api(brawl_client)
+        
+        counters = await counter_service.get_counters(
+            db,
+            brawler_name,
+            mode=mode,
+            top_n=top_n
+        )
+        
+        if not counters:
+            return {
+                "brawler": brawler_name,
+                "mode": mode or "global",
+                "counters": [],
+                "message": f"No matchup data available for {brawler_name}"
+            }
+        
+        return {
+            "brawler": brawler_name,
+            "mode": mode or "global",
+            "counters": [c.to_dict() for c in counters]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting counters for {brawler_name}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/counters/team")
+async def analyze_team_counters(
+    request: TeamCounterRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Analyze an enemy team composition and recommend optimal counter picks.
+    
+    Args:
+        request: TeamCounterRequest with enemy_brawlers list and optional mode
+    """
+    if not request.enemy_brawlers or len(request.enemy_brawlers) == 0:
+        raise HTTPException(status_code=400, detail="enemy_brawlers list is required")
+    
+    if len(request.enemy_brawlers) > 3:
+        raise HTTPException(status_code=400, detail="Maximum 3 enemy brawlers allowed")
+    
+    try:
+        from services.counter_pick_service import CounterPickService
+        
+        counter_service = CounterPickService()
+        if brawl_client:
+            counter_service.set_brawl_api(brawl_client)
+        
+        analysis = await counter_service.analyze_enemy_team(
+            db,
+            request.enemy_brawlers,
+            mode=request.mode
+        )
+        
+        return analysis.to_dict()
+        
+    except Exception as e:
+        logger.error(f"Error analyzing team {request.enemy_brawlers}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# TEAM SYNERGY ENDPOINTS
+# =============================================================================
+
+class SynergyAnalysisRequest(BaseModel):
+    """Request model for team synergy analysis"""
+    brawlers: list[str]
+    mode: Optional[str] = None
+
+
+class ThirdBrawlerRequest(BaseModel):
+    """Request model for third brawler suggestion"""
+    brawler1: str
+    brawler2: str
+    mode: Optional[str] = None
+    top_n: int = 5
+
+
+@app.post("/api/synergy/analyze")
+async def analyze_team_synergy(
+    request: SynergyAnalysisRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Analyze the synergy of a team composition.
+    
+    Args:
+        request: SynergyAnalysisRequest with 2-3 brawlers and optional mode
+    """
+    if not request.brawlers or len(request.brawlers) < 2:
+        raise HTTPException(status_code=400, detail="At least 2 brawlers required")
+    
+    if len(request.brawlers) > 3:
+        raise HTTPException(status_code=400, detail="Maximum 3 brawlers allowed")
+    
+    try:
+        from services.team_synergy_service import TeamSynergyService
+        
+        synergy_service = TeamSynergyService()
+        if brawl_client:
+            synergy_service.set_brawl_api(brawl_client)
+        
+        analysis = await synergy_service.analyze_synergy(
+            db,
+            request.brawlers,
+            mode=request.mode
+        )
+        
+        return analysis.to_dict()
+        
+    except Exception as e:
+        logger.error(f"Error analyzing synergy for {request.brawlers}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/synergy/suggest")
+async def suggest_third_brawler(
+    request: ThirdBrawlerRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Suggest the best third brawler to complete a team.
+    
+    Args:
+        request: ThirdBrawlerRequest with 2 brawlers, mode, and top_n
+    """
+    if not request.brawler1 or not request.brawler2:
+        raise HTTPException(status_code=400, detail="Two brawlers required")
+    
+    try:
+        from services.team_synergy_service import TeamSynergyService
+        
+        synergy_service = TeamSynergyService()
+        if brawl_client:
+            synergy_service.set_brawl_api(brawl_client)
+        
+        suggestions = await synergy_service.suggest_third_brawler(
+            db,
+            request.brawler1,
+            request.brawler2,
+            mode=request.mode,
+            top_n=request.top_n
+        )
+        
+        return {
+            "current_team": [request.brawler1, request.brawler2],
+            "suggestions": [s.to_dict() for s in suggestions],
+            "mode": request.mode or "global"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error suggesting third for {request.brawler1}+{request.brawler2}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# PLAYER AND STATS ENDPOINTS
+# =============================================================================
 
 
 @app.get("/api/cache/stats")

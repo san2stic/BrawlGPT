@@ -437,24 +437,380 @@ class BrawlerTrendHistory(Base):
     brawler_id = Column(Integer, index=True)
     brawler_name = Column(String(50))
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
-    
+
     # Performance metrics
     pick_rate = Column(Float)  # Percentage
     win_rate = Column(Float)   # Percentage
     avg_trophy_change = Column(Float)
-    
+
     # Trend analysis
     trend_direction = Column(String(20))  # "rising", "falling", "stable"
     trend_strength = Column(Float)  # 0.0 to 1.0, how strong the trend is
-    
+
     # Rankings
     popularity_rank = Column(Integer)  # 1 = most popular
     performance_rank = Column(Integer)  # 1 = best performing
-    
+
     # Sample size
     games_analyzed = Column(Integer)
-    
+
     __table_args__ = (
         Index('idx_brawler_trend_id_time', 'brawler_id', 'timestamp'),
         Index('idx_trend_direction', 'trend_direction'),
+    )
+
+
+# =============================================================================
+# COUNTER-PICK AND MATCHUP MODELS
+# =============================================================================
+
+class BrawlerMatchup(Base):
+    """
+    Tracks win rates between brawler pairs.
+    Used for counter-pick recommendations.
+    """
+    __tablename__ = "brawler_matchups"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Brawler A (the counter)
+    brawler_a_id = Column(Integer, index=True)
+    brawler_a_name = Column(String(50))
+
+    # Brawler B (the countered)
+    brawler_b_id = Column(Integer, index=True)
+    brawler_b_name = Column(String(50))
+
+    # Win rate of A when facing B
+    win_rate_a_vs_b = Column(Float)  # Percentage
+
+    # Sample size for reliability
+    sample_size = Column(Integer, default=0)
+
+    # Mode filter (nullable = all modes)
+    mode = Column(String(50), nullable=True, index=True)
+
+    # Metadata
+    last_updated = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint('brawler_a_id', 'brawler_b_id', 'mode', name='uq_matchup'),
+        Index('idx_matchup_countered', 'brawler_b_id', 'win_rate_a_vs_b'),
+        Index('idx_matchup_counter', 'brawler_a_id', 'win_rate_a_vs_b'),
+    )
+
+
+# =============================================================================
+# MAP PERFORMANCE MODELS
+# =============================================================================
+
+class MapBrawlerPerformance(Base):
+    """
+    Tracks brawler performance on specific maps.
+    Used for map-specific recommendations.
+    """
+    __tablename__ = "map_brawler_performance"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Map identification
+    map_name = Column(String(100), index=True)
+    mode = Column(String(50), index=True)
+
+    # Brawler
+    brawler_id = Column(Integer, index=True)
+    brawler_name = Column(String(50))
+
+    # Performance metrics
+    win_rate = Column(Float)
+    pick_rate = Column(Float)
+    avg_trophy_change = Column(Float, nullable=True)
+
+    # Sample size
+    sample_size = Column(Integer, default=0)
+
+    # Trophy range (nullable = all ranges)
+    trophy_range_min = Column(Integer, nullable=True)
+    trophy_range_max = Column(Integer, nullable=True)
+
+    # Metadata
+    last_updated = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint('map_name', 'mode', 'brawler_id', name='uq_map_brawler'),
+        Index('idx_map_performance', 'map_name', 'mode', 'win_rate'),
+        Index('idx_brawler_maps', 'brawler_id', 'win_rate'),
+    )
+
+
+class MapData(Base):
+    """
+    Static map data including layout characteristics.
+    Used for strategic recommendations.
+    """
+    __tablename__ = "map_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Map identification
+    map_name = Column(String(100), unique=True, index=True)
+    mode = Column(String(50), index=True)
+
+    # Map characteristics (JSON)
+    characteristics = Column(JSON)  # {
+        # "size": "large",
+        # "wall_density": "high",
+        # "grass_coverage": "medium",
+        # "open_areas": ["center", "sides"],
+        # "choke_points": ["mid lane"],
+    # }
+
+    # Recommended archetypes (JSON)
+    recommended_archetypes = Column(JSON)  # ["tank", "sharpshooter"]
+
+    # Metadata
+    is_active = Column(Boolean, default=True)  # Whether map is in rotation
+    last_updated = Column(DateTime, default=datetime.utcnow)
+
+
+# =============================================================================
+# ACHIEVEMENT MODELS
+# =============================================================================
+
+class Achievement(Base):
+    """
+    Achievement definitions for the platform.
+    """
+    __tablename__ = "achievements"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Achievement details
+    name = Column(String(100), unique=True)
+    description = Column(Text)
+    icon = Column(String(100))  # Icon identifier
+
+    # Categorization
+    category = Column(String(50), index=True)  # "trophies", "brawlers", "victories", "streaks"
+
+    # Requirements
+    requirement_type = Column(String(50))  # "total_trophies", "brawler_rank", etc.
+    threshold = Column(Integer)  # Value to achieve
+
+    # Rewards (optional)
+    reward_points = Column(Integer, default=0)
+
+    # Rarity
+    rarity = Column(String(20), default="common")  # "common", "rare", "epic", "legendary"
+
+    # Metadata
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class UserAchievement(Base):
+    """
+    Tracks achievements unlocked by users.
+    """
+    __tablename__ = "user_achievements"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    achievement_id = Column(Integer, ForeignKey("achievements.id", ondelete="CASCADE"), index=True)
+
+    # Progress tracking
+    progress = Column(Integer, default=0)  # Current progress
+    unlocked_at = Column(DateTime, nullable=True)  # When achieved
+
+    # Notification status
+    notified = Column(Boolean, default=False)
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'achievement_id', name='uq_user_achievement'),
+        Index('idx_user_achievement_unlocked', 'user_id', 'unlocked_at'),
+    )
+
+
+# =============================================================================
+# DAILY CHALLENGE MODELS
+# =============================================================================
+
+class DailyChallenge(Base):
+    """
+    AI-generated daily challenges for users.
+    """
+    __tablename__ = "daily_challenges"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    player_tag = Column(String(20), index=True)
+
+    # Challenge date
+    challenge_date = Column(DateTime, index=True)
+
+    # Challenge details
+    title = Column(String(200))
+    description = Column(Text)
+    challenge_type = Column(String(50))  # "mode_mastery", "brawler_practice", "trophy_target"
+
+    # Target
+    target_value = Column(Integer)
+    current_value = Column(Integer, default=0)
+
+    # Optional specifics
+    target_brawler = Column(String(50), nullable=True)
+    target_mode = Column(String(50), nullable=True)
+
+    # Status
+    status = Column(String(20), default="active")  # "active", "completed", "expired"
+    completed_at = Column(DateTime, nullable=True)
+
+    # Rewards
+    reward_points = Column(Integer, default=10)
+
+    # AI generation metadata
+    difficulty = Column(String(20), default="medium")  # "easy", "medium", "hard"
+
+    __table_args__ = (
+        Index('idx_challenge_user_date', 'user_id', 'challenge_date'),
+        Index('idx_challenge_status', 'status'),
+    )
+
+
+# =============================================================================
+# TOURNAMENT MODELS
+# =============================================================================
+
+class Tournament(Base):
+    """
+    Tournament definition and configuration.
+    """
+    __tablename__ = "tournaments"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Tournament info
+    name = Column(String(200))
+    description = Column(Text, nullable=True)
+
+    # Creator
+    creator_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    # Configuration
+    tournament_type = Column(String(50))  # "single_elimination", "double_elimination", "round_robin"
+    max_teams = Column(Integer, default=8)
+    team_size = Column(Integer, default=3)  # Players per team
+
+    # Game settings
+    mode = Column(String(50))
+    maps = Column(JSON)  # List of maps to use
+
+    # Schedule
+    registration_start = Column(DateTime)
+    registration_end = Column(DateTime)
+    start_time = Column(DateTime)
+
+    # Status
+    status = Column(String(20), default="draft")  # "draft", "registration", "in_progress", "completed", "cancelled"
+
+    # Results
+    winner_team_id = Column(Integer, ForeignKey("tournament_teams.id", ondelete="SET NULL"), nullable=True)
+
+    # Metadata
+    creator_code = Column(String, nullable=True)
+    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    teams = relationship("TournamentTeam", back_populates="tournament", foreign_keys="TournamentTeam.tournament_id")
+    matches = relationship("TournamentMatch", back_populates="tournament")
+
+    __table_args__ = (
+        Index('idx_tournament_status', 'status'),
+        Index('idx_tournament_start', 'start_time'),
+    )
+
+
+class TournamentTeam(Base):
+    """
+    Team registered for a tournament.
+    """
+    __tablename__ = "tournament_teams"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    tournament_id = Column(Integer, ForeignKey("tournaments.id", ondelete="CASCADE"), index=True)
+
+    # Team info
+    name = Column(String(100))
+    tag = Column(String(50), nullable=True)
+
+    # Captain
+    captain_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    # Members (JSON list of player tags)
+    members = Column(JSON)  # [{"tag": "ABC123", "name": "Player1"}, ...]
+
+    # Status
+    status = Column(String(20), default="registered")  # "registered", "checked_in", "eliminated", "winner"
+
+    # Stats
+    wins = Column(Integer, default=0)
+    losses = Column(Integer, default=0)
+
+    # Seed (for brackets)
+    seed = Column(Integer, nullable=True)
+
+    # Metadata
+    registered_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    tournament = relationship("Tournament", back_populates="teams", foreign_keys=[tournament_id])
+
+    __table_args__ = (
+        Index('idx_team_tournament', 'tournament_id'),
+    )
+
+
+class TournamentMatch(Base):
+    """
+    Individual match in a tournament.
+    """
+    __tablename__ = "tournament_matches"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    tournament_id = Column(Integer, ForeignKey("tournaments.id", ondelete="CASCADE"), index=True)
+
+    # Round and bracket position
+    round_number = Column(Integer)
+    match_number = Column(Integer)
+    bracket_position = Column(String(50), nullable=True)  # "winners", "losers", "finals"
+
+    # Teams
+    team_a_id = Column(Integer, ForeignKey("tournament_teams.id", ondelete="SET NULL"), nullable=True)
+    team_b_id = Column(Integer, ForeignKey("tournament_teams.id", ondelete="SET NULL"), nullable=True)
+
+    # Result
+    winner_id = Column(Integer, ForeignKey("tournament_teams.id", ondelete="SET NULL"), nullable=True)
+    score_a = Column(Integer, default=0)
+    score_b = Column(Integer, default=0)
+
+    # Match details
+    map_played = Column(String(100), nullable=True)
+
+    # Schedule
+    scheduled_time = Column(DateTime, nullable=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+
+    # Status
+    status = Column(String(20), default="pending")  # "pending", "in_progress", "completed", "cancelled"
+
+    # Relationships
+    tournament = relationship("Tournament", back_populates="matches")
+
+    __table_args__ = (
+        Index('idx_match_tournament_round', 'tournament_id', 'round_number'),
     )

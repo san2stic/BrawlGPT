@@ -1,0 +1,226 @@
+.club-member-list {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+}
+
+.club-member-list.loading,
+.club-member-list.error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+}
+
+.club-member-list .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+/* List Header */
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.list-header h3 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.sort-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.sort-controls button {
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sort-controls button:hover {
+    background: var(--bg-elevated);
+}
+
+.sort-controls button.active {
+    background: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+/* Members Container */
+.members-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Member Card */
+.member-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--bg-tertiary);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.member-card:hover {
+    background: var(--bg-elevated);
+    transform: translateX(4px);
+}
+
+/* Top 3 special styling */
+.member-card.rank-1 {
+    border-color: #FFD700;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, var(--bg-tertiary) 100%);
+}
+
+.member-card.rank-2 {
+    border-color: #C0C0C0;
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.1) 0%, var(--bg-tertiary) 100%);
+}
+
+.member-card.rank-3 {
+    border-color: #CD7F32;
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.1) 0%, var(--bg-tertiary) 100%);
+}
+
+/* Member Rank */
+.member-rank {
+    flex-shrink: 0;
+    width: 50px;
+    text-align: center;
+}
+
+.rank-badge {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.rank-1 .rank-badge {
+    font-size: 2rem;
+}
+
+/* Member Info */
+.member-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.member-name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.role-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.member-details {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.member-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.member-role {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.member-tag {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-family: monospace;
+    opacity: 0.7;
+}
+
+/* Member Trophies */
+.member-trophies {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.trophy-count {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.trophy-icon {
+    font-size: 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .club-member-list {
+        padding: 1.5rem;
+    }
+
+    .list-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .member-card {
+        padding: 0.875rem;
+    }
+
+    .member-rank {
+        width: 40px;
+    }
+
+    .rank-badge {
+        font-size: 1.2rem;
+    }
+
+    .member-name {
+        font-size: 0.95rem;
+    }
+
+    .trophy-count {
+        font-size: 1.1rem;
+    }
+}

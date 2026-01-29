@@ -141,11 +141,295 @@ export async function sendChatMessage(
   }
 }
 
+/**
+ * Stream chat messages from the AI agent using Server-Sent Events
+ * @param messages - Chat history
+ * @param playerContext - Current player data for context
+ * @param onChunk - Callback for each received chunk
+ * @param onComplete - Callback when streaming completes
+ * @param onError - Callback for errors
+ */
+export async function sendChatMessageStream(
+  messages: ChatMessage[],
+  playerContext: Player | null,
+  onChunk: (chunk: string) => void,
+  onComplete?: () => void,
+  onError?: (error: Error) => void
+): Promise<void> {
+  const url = `${API_BASE_URL}/api/chat/stream`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+      },
+      body: JSON.stringify({
+        messages,
+        player_context: playerContext,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new ApiError("Failed to start streaming", response.status);
+    }
+
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        onComplete?.();
+        break;
+      }
+
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+
+            if (data.error) {
+              throw new Error(data.error);
+            }
+
+            if (data.content) {
+              onChunk(data.content);
+            }
+          } catch (parseError) {
+            console.error('Failed to parse SSE data:', parseError);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Chat Stream Error:", error);
+    const apiError = error instanceof ApiError
+      ? error
+      : new ApiError("Failed to stream chat response", 500);
+    onError?.(apiError);
+    throw apiError;
+  }
+}
+
 export const playerService = {
   getPlayerAnalysis,
   checkHealth,
   sendChatMessage,
+  sendChatMessageStream,
+  getCounterPicks,
+  analyzeEnemyTeam,
+  analyzeSynergy,
+  suggestThirdBrawler,
 };
+
+// =============================================================================
+// COUNTER-PICK API
+// =============================================================================
+
+export interface CounterPick {
+  brawler_id: number;
+  brawler_name: string;
+  win_rate: number;
+  sample_size: number;
+  mode: string | null;
+  reasoning: string;
+  confidence: 'low' | 'medium' | 'high';
+}
+
+export interface CounterPickResponse {
+  brawler: string;
+  mode: string;
+  counters: CounterPick[];
+  message?: string;
+}
+
+export interface TeamCounterAnalysis {
+  enemy_team: string[];
+  recommended_picks: CounterPick[];
+  synergy_score: number;
+  mode: string;
+  analysis: string;
+}
+
+/**
+ * Get counter-picks for a specific brawler
+ */
+export async function getCounterPicks(
+  brawlerName: string,
+  mode?: string,
+  topN: number = 5
+): Promise<CounterPickResponse> {
+  try {
+    const params = new URLSearchParams();
+    if (mode) params.append('mode', mode);
+    params.append('top_n', topN.toString());
+
+    const url = `${API_BASE_URL}/api/counters/${encodeURIComponent(brawlerName)}${params.toString() ? '?' + params.toString() : ''}`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new ApiError(
+        `Failed to get counters: ${response.statusText}`,
+        response.status
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      error instanceof Error ? error.message : 'Unknown error getting counters',
+      500
+    );
+  }
+}
+
+/**
+ * Analyze enemy team composition and get counter recommendations
+ */
+export async function analyzeEnemyTeam(
+  enemyBrawlers: string[],
+  mode?: string
+): Promise<TeamCounterAnalysis> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/counters/team`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        enemy_brawlers: enemyBrawlers,
+        mode: mode || null,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new ApiError(
+        `Failed to analyze team: ${response.statusText}`,
+        response.status
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      error instanceof Error ? error.message : 'Unknown error analyzing team',
+      500
+    );
+  }
+}
+
+// =============================================================================
+// TEAM SYNERGY API
+// =============================================================================
+
+export interface SynergyAnalysis {
+  brawlers: string[];
+  overall_synergy: number;
+  pairwise_synergies: { [key: string]: number };
+  strengths: string[];
+  weaknesses: string[];
+  mode: string | null;
+}
+
+export interface BrawlerSuggestion {
+  brawler_id: number;
+  brawler_name: string;
+  synergy_score: number;
+  win_rate_boost: number;
+  reasoning: string;
+  confidence: 'low' | 'medium' | 'high';
+}
+
+export interface ThirdBrawlerResponse {
+  current_team: string[];
+  suggestions: BrawlerSuggestion[];
+  mode: string;
+}
+
+/**
+ * Analyze the synergy of a team composition
+ */
+export async function analyzeSynergy(
+  brawlers: string[],
+  mode?: string
+): Promise<SynergyAnalysis> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/synergy/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        brawlers: brawlers,
+        mode: mode || null,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new ApiError(
+        `Failed to analyze synergy: ${response.statusText}`,
+        response.status
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      error instanceof Error ? error.message : 'Unknown error analyzing synergy',
+      500
+    );
+  }
+}
+
+/**
+ * Suggest the best third brawler to complete a team
+ */
+export async function suggestThirdBrawler(
+  brawler1: string,
+  brawler2: string,
+  mode?: string,
+  topN: number = 5
+): Promise<ThirdBrawlerResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/synergy/suggest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        brawler1: brawler1,
+        brawler2: brawler2,
+        mode: mode || null,
+        top_n: topN,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new ApiError(
+        `Failed to get suggestions: ${response.statusText}`,
+        response.status
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      error instanceof Error ? error.message : 'Unknown error getting suggestions',
+      500
+    );
+  }
+}
 
 // =============================================================================
 // SCHEDULE API

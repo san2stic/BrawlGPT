@@ -798,6 +798,106 @@ RÉPONDS UNIQUEMENT AVEC LE JSON, RIEN D'AUTRE."""
             
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse AI response as JSON: {e}")
+            raise AIGenerationError(f"Invalid AI response format: {str(e)}")
+        except Exception as e:
+            logger.error(f"Failed to generate schedule: {e}")
+            raise AIGenerationError(f"Schedule generation failed: {str(e)}")
+    
+    async def chat_stream(
+        self,
+        messages: list[dict[str, str]],
+        player_context: Optional[dict[str, Any]] = None,
+        db: AsyncSession = None
+    ):
+        """
+        Stream chat responses chunk by chunk for real-time UI updates.
+        
+        Args:
+            messages: Chat history
+            player_context: Optional player data for context
+            db: Database session
+            
+        Yields:
+            String chunks of the AI response
+        """
+        try:
+            # Build enriched system prompt (same as chat method)
+            system_content = SYSTEM_PROMPT_BASE
+            
+            player_tag = None
+            if player_context:
+                player_summary = self._extract_player_summary(player_context)
+                player_tag = player_summary.get('tag', '').upper().replace("#", "")
+                
+                system_content += f"""
+
+## Contexte du Joueur Actuel
+- **Nom**: {player_summary['name']}
+- **Trophées**: {player_summary['trophies']:,}
+- **Niveau**: {player_summary['expLevel']}
+- **Club**: {player_summary['club'] or 'Aucun'}
+- **Brawlers**: {player_summary['totalBrawlers']}
+
+{self._format_all_brawlers_summary(player_summary.get('allBrawlers', []))}
+"""
+            
+            # Add conversation history and memory
+            if db and player_tag:
+                history = await self._get_chat_history(db, player_tag)
+                memory = await self._get_conversation_memory(db, player_tag)
+                if history:
+                    system_content += history
+                if memory:
+                    system_content += memory
+                system_content += "\nUtilise cet historique pour donner des conseils cohérents."
+            
+            # Prepare messages for API
+            api_messages = [{"role": "system", "content": system_content}]
+            
+            last_user_message = ""
+            for msg in messages:
+                if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
+                    api_messages.append({"role": msg['role'], "content": msg['content']})
+                    if msg['role'] == 'user':
+                        last_user_message = msg['content']
+            
+            logger.debug("Sending streaming chat request to OpenRouter API")
+            
+            # Create streaming response
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=api_messages,
+                max_tokens=2000,
+                temperature=0.7,
+                stream=True  # Enable streaming
+            )
+            
+            # Stream chunks
+            full_response = ""
+            async for chunk in response:
+                if chunk.choices[0].delta.content:
+                    content = chunk.choices[0].delta.content
+                    full_response += content
+                    yield content
+            
+            # Save interaction to DB after streaming completes
+            if db and player_tag and last_user_message:
+                try:
+                    new_interaction = Interaction(
+                        player_tag=player_tag,
+                        input_message=last_user_message,
+                        output_message=full_response,
+                        timestamp=datetime.utcnow()
+                    )
+                    db.add(new_interaction)
+                    await db.commit()
+                    logger.info("Saved streamed interaction to database")
+                except Exception as e:
+                    logger.error(f"Failed to save streamed interaction: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Failed to generate streaming chat response: {e}")
+            raise AIGenerationError(f"Failed to generate streaming response: {str(e)}")
             raise AIGenerationError(f"AI returned invalid JSON: {str(e)}")
         except Exception as e:
             logger.error(f"Failed to generate schedule: {e}")

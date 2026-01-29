@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Player, ChatMessage } from '../types';
-import { sendChatMessage } from '../services/api';
+import { sendChatMessageStream } from '../services/api';
 
 interface ChatInterfaceProps {
     player: Player | null;
@@ -11,6 +11,7 @@ export default function ChatInterface({ player }: ChatInterfaceProps) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [streamingMessage, setStreamingMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -19,7 +20,7 @@ export default function ChatInterface({ player }: ChatInterfaceProps) {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, isOpen]);
+    }, [messages, isOpen, streamingMessage]);
 
     const handleSend = async () => {
         if (!inputValue.trim() || isLoading) return;
@@ -28,23 +29,41 @@ export default function ChatInterface({ player }: ChatInterfaceProps) {
         setMessages(prev => [...prev, userMessage]);
         setInputValue('');
         setIsLoading(true);
+        setStreamingMessage('');
 
         try {
-            // Include chat history except the last one added manually to avoid duplication if we were sending whole list logic
-            // Actually we send the whole history including the new message
             const history = [...messages, userMessage];
-            const response = await sendChatMessage(history, player);
 
-            const botMessage: ChatMessage = { role: 'assistant', content: response };
-            setMessages(prev => [...prev, botMessage]);
+            await sendChatMessageStream(
+                history,
+                player,
+                // onChunk: Accumulate streaming chunks
+                (chunk: string) => {
+                    setStreamingMessage((prev) => prev + chunk);
+                },
+                // onComplete: Add complete message to history
+                () => {
+                    setMessages((prev) => [
+                        ...prev,
+                        { role: 'assistant', content: streamingMessage },
+                    ]);
+                    setStreamingMessage('');
+                    setIsLoading(false);
+                },
+                // onError: Handle streaming errors
+                (_err: Error) => {
+                    const errorMessage: ChatMessage = {
+                        role: 'system',
+                        content: 'Désolé, je rencontre des difficultés pour répondre. Veuillez réessayer plus tard.'
+                    };
+                    setMessages((prev) => [...prev, errorMessage]);
+                    setStreamingMessage('');
+                    setIsLoading(false);
+                }
+            );
         } catch (error) {
-            const errorMessage: ChatMessage = {
-                role: 'system',
-                content: 'Désolé, je rencontre des difficultés pour répondre. Veuillez réessayer plus tard.'
-            };
-            setMessages(prev => [...prev, errorMessage]);
-        } finally {
-            setIsLoading(false);
+            // Error already handled in onError callback
+            console.error('Chat streaming error:', error);
         }
     };
 
@@ -61,8 +80,8 @@ export default function ChatInterface({ player }: ChatInterfaceProps) {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`fixed bottom-6 right-6 p-4 rounded-full shadow-lg transition-all duration-300 z-50 ${isOpen
-                        ? 'bg-slate-700 hover:bg-slate-600 rotate-90'
-                        : 'bg-gradient-to-r from-yellow-400 to-orange-600 hover:scale-110 animate-bounce'
+                    ? 'bg-slate-700 hover:bg-slate-600 rotate-90'
+                    : 'bg-gradient-to-r from-yellow-400 to-orange-600 hover:scale-110 animate-bounce'
                     }`}
             >
                 {isOpen ? (
@@ -79,8 +98,8 @@ export default function ChatInterface({ player }: ChatInterfaceProps) {
             {/* Chat Window */}
             <div
                 className={`fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl transition-all duration-300 z-50 flex flex-col overflow-hidden ${isOpen
-                        ? 'opacity-100 translate-y-0 h-[600px] max-h-[calc(100vh-8rem)]'
-                        : 'opacity-0 translate-y-10 h-0 pointer-events-none'
+                    ? 'opacity-100 translate-y-0 h-[600px] max-h-[calc(100vh-8rem)]'
+                    : 'opacity-0 translate-y-10 h-0 pointer-events-none'
                     }`}
             >
                 {/* Header */}
@@ -114,10 +133,10 @@ export default function ChatInterface({ player }: ChatInterfaceProps) {
                         >
                             <div
                                 className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.role === 'user'
-                                        ? 'bg-blue-600 text-white rounded-br-none'
-                                        : msg.role === 'system'
-                                            ? 'bg-red-500/20 text-red-200 border border-red-500/30'
-                                            : 'bg-slate-700 text-slate-200 rounded-bl-none'
+                                    ? 'bg-blue-600 text-white rounded-br-none'
+                                    : msg.role === 'system'
+                                        ? 'bg-red-500/20 text-red-200 border border-red-500/30'
+                                        : 'bg-slate-700 text-slate-200 rounded-bl-none'
                                     }`}
                             >
                                 <div className="whitespace-pre-wrap">{msg.content}</div>

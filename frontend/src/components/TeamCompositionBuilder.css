@@ -1,0 +1,408 @@
+.team-builder {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.builder-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.builder-header h2 {
+    color: var(--text-primary);
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.builder-header p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+/* Controls */
+.builder-controls {
+    margin-bottom: 2rem;
+}
+
+.brawler-input-group {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.brawler-input {
+    flex: 2;
+    min-width: 200px;
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.brawler-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.add-button {
+    padding: 0.75rem 1.5rem;
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.add-button:hover {
+    opacity: 0.9;
+}
+
+/* Team Slots */
+.team-slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.team-slot {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.team-slot.empty {
+    background: var(--bg-tertiary);
+    border: 2px dashed var(--border-color);
+}
+
+.team-slot.filled {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    border: 2px solid var(--accent-primary);
+    box-shadow: var(--shadow-md);
+}
+
+.empty-slot-text {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.brawler-name {
+    color: white;
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.remove-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.remove-button:hover {
+    background: rgba(255, 59, 48, 0.8);
+}
+
+/* Synergy Analysis */
+.synergy-analysis {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.synergy-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.synergy-header h3 {
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    margin: 0;
+}
+
+.synergy-score {
+    text-align: right;
+}
+
+.score-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.score-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+/* Pairwise Synergies */
+.pairwise-section {
+    margin-bottom: 1.5rem;
+}
+
+.pairwise-section h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.pairwise-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.pairwise-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+}
+
+.pair-name {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.pair-score {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+/* Insights */
+.insights-section {
+    margin-top: 1rem;
+}
+
+.insights-section h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.insights-section ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.insights-section li {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 0.25rem;
+}
+
+.strengths li {
+    color: var(--accent-success);
+}
+
+.weaknesses li {
+    color: var(--accent-warning);
+}
+
+/* Suggestions */
+.suggestions-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.suggestions-section h3 {
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.suggestions-hint {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.suggestions-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.suggestion-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.suggestion-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-primary);
+}
+
+.suggestion-rank {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    min-width: 40px;
+    text-align: center;
+}
+
+.suggestion-info {
+    flex: 1;
+}
+
+.suggestion-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.suggestion-reason {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.suggestion-stats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.synergy-badge {
+    text-align: center;
+}
+
+.synergy-badge .stat-value {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent-success);
+}
+
+.synergy-badge .stat-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.confidence-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.confidence-high {
+    color: var(--accent-success);
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.confidence-medium {
+    color: var(--accent-warning);
+    background: rgba(255, 193, 7, 0.1);
+}
+
+.confidence-low {
+    color: var(--text-secondary);
+    background: var(--bg-elevated);
+}
+
+/* Loading */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-overlay p {
+    color: white;
+    margin-top: 1rem;
+    font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .team-builder {
+        padding: 1rem;
+    }
+
+    .team-slots {
+        grid-template-columns: 1fr;
+    }
+
+    .brawler-input-group {
+        flex-direction: column;
+    }
+
+    .brawler-input {
+        width: 100%;
+    }
+
+    .suggestion-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}

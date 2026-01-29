@@ -1,0 +1,17 @@
+# Docker Compose Override for Fixed IP Deployment
+# IMPORTANT: Replace VOTRE_IP_FIXE with your actual Jelastic fixed IP
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Replace VOTRE_IP_FIXE with your actual IP (e.g., 193.121.201.205)
+        - VITE_API_URL=http://VOTRE_IP_FIXE:8000
+
+  backend:
+    environment:
+      # This ensures the backend accepts connections from the fixed IP
+      # Replace VOTRE_IP_FIXE with your actual IP
+      - ALLOWED_ORIGINS=http://localhost:3000,http://VOTRE_IP_FIXE:3000,https://VOTRE_IP_FIXE:3000

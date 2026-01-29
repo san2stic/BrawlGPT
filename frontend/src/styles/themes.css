@@ -1,0 +1,89 @@
+/**
+ * Theme CSS Variables for Light and Dark Modes
+ * Applied via data-theme attribute on document root
+ */
+
+/* Light Theme (Default) */
+[data-theme="light"] {
+    /* Background Colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f7fa;
+    --bg-tertiary: #e8ecf1;
+    --bg-elevated: #ffffff;
+
+    /* Text Colors */
+    --text-primary: #1a1a1a;
+    --text-secondary: #6b7280;
+    --text-tertiary: #9ca3af;
+    --text-inverse: #ffffff;
+
+    /* Border Colors */
+    --border-color: #e5e7eb;
+    --border-hover: #d1d5db;
+
+    /* Accent Colors */
+    --accent-primary: #3b82f6;
+    --accent-primary-hover: #2563eb;
+    --accent-secondary: #8b5cf6;
+    --accent-success: #10b981;
+    --accent-warning: #f59e0b;
+    --accent-danger: #ef4444;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+    /* Chart Colors */
+    --chart-color-1: #3b82f6;
+    --chart-color-2: #8b5cf6;
+    --chart-color-3: #10b981;
+    --chart-color-4: #f59e0b;
+    --chart-color-5: #ef4444;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    /* Background Colors */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-elevated: #1e293b;
+
+    /* Text Colors */
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --text-inverse: #0f172a;
+
+    /* Border Colors */
+    --border-color: #334155;
+    --border-hover: #475569;
+
+    /* Accent Colors */
+    --accent-primary: #60a5fa;
+    --accent-primary-hover: #3b82f6;
+    --accent-secondary: #a78bfa;
+    --accent-success: #34d399;
+    --accent-warning: #fbbf24;
+    --accent-danger: #f87171;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
+
+    /* Chart Colors */
+    --chart-color-1: #60a5fa;
+    --chart-color-2: #a78bfa;
+    --chart-color-3: #34d399;
+    --chart-color-4: #fbbf24;
+    --chart-color-5: #f87171;
+}
+
+/* Smooth theme transitions */
+* {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}

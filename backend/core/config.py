@@ -5,9 +5,9 @@ Uses Pydantic Settings for validation and environment variable loading.
 
 import os
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, SecretStr
 
 
 class Settings(BaseSettings):
@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     )
 
     # =========================================================================
-    # API Keys (Required)
+    # API Keys (Required - No defaults for security)
     # =========================================================================
     brawl_api_key: str = Field(
         ...,
@@ -34,10 +34,10 @@ class Settings(BaseSettings):
         ...,
         description="OpenRouter API key for LLM access"
     )
-    secret_key: str = Field(
-        ...,  # No default - REQUIRED from environment
+    secret_key: SecretStr = Field(
+        ...,
         min_length=32,
-        description="REQUIRED: Secret key for JWT token signing. Must be set via SECRET_KEY env var."
+        description="REQUIRED: Secret key for JWT token signing (min 32 characters)"
     )
 
     # =========================================================================
@@ -46,6 +46,30 @@ class Settings(BaseSettings):
     database_url: str = Field(
         default="postgresql+asyncpg://postgres:postgres@localhost:5432/brawlgpt_db",
         description="PostgreSQL connection string (async)"
+    )
+    db_pool_size: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+        description="Database connection pool size"
+    )
+    db_pool_max_overflow: int = Field(
+        default=20,
+        ge=0,
+        le=100,
+        description="Maximum overflow connections beyond pool size"
+    )
+    db_pool_timeout: int = Field(
+        default=30,
+        ge=5,
+        le=120,
+        description="Seconds to wait for a connection from pool"
+    )
+    db_pool_recycle: int = Field(
+        default=1800,
+        ge=300,
+        le=7200,
+        description="Seconds before connection is recycled"
     )
 
     # =========================================================================
@@ -58,6 +82,12 @@ class Settings(BaseSettings):
     redis_enabled: bool = Field(
         default=True,
         description="Enable Redis caching (falls back to in-memory if disabled)"
+    )
+    redis_max_connections: int = Field(
+        default=50,
+        ge=10,
+        le=500,
+        description="Maximum Redis connections"
     )
 
     # =========================================================================
@@ -92,6 +122,10 @@ class Settings(BaseSettings):
         default="10/minute",
         description="Rate limit for cache management endpoints"
     )
+    rate_limit_meta: str = Field(
+        default="20/minute",
+        description="Rate limit for meta endpoints"
+    )
 
     # =========================================================================
     # Logging
@@ -100,7 +134,7 @@ class Settings(BaseSettings):
         default="INFO",
         description="Logging level (DEBUG, INFO, WARNING, ERROR)"
     )
-    log_format: str = Field(
+    log_format: Literal["json", "text"] = Field(
         default="json",
         description="Log format: 'json' for structured, 'text' for human-readable"
     )
@@ -121,17 +155,33 @@ class Settings(BaseSettings):
         default="anthropic/claude-sonnet-4.5",
         description="OpenRouter model ID for AI agent"
     )
+    ai_model_fast: str = Field(
+        default="google/gemini-2.0-flash-001",
+        description="Fast model for quick operations"
+    )
     ai_max_tokens: int = Field(
         default=2000,
         ge=100,
         le=100000,
         description="Maximum tokens for AI responses"
     )
+    ai_max_tokens_analysis: int = Field(
+        default=4000,
+        ge=500,
+        le=100000,
+        description="Maximum tokens for profile analysis"
+    )
     ai_temperature: float = Field(
         default=0.7,
         ge=0.0,
         le=2.0,
         description="AI temperature for response generation"
+    )
+    ai_timeout: int = Field(
+        default=60,
+        ge=10,
+        le=300,
+        description="AI request timeout in seconds"
     )
 
     # =========================================================================
@@ -161,6 +211,22 @@ class Settings(BaseSettings):
         default=True,
         description="Enable meta trend detection"
     )
+    enable_counter_picks: bool = Field(
+        default=True,
+        description="Enable counter-pick system"
+    )
+    enable_team_builder: bool = Field(
+        default=True,
+        description="Enable team composition builder"
+    )
+    enable_websocket: bool = Field(
+        default=True,
+        description="Enable WebSocket notifications"
+    )
+    enable_streaming_chat: bool = Field(
+        default=True,
+        description="Enable streaming chat responses"
+    )
 
     # =========================================================================
     # Meta Crawler
@@ -177,7 +243,7 @@ class Settings(BaseSettings):
         le=500,
         description="Maximum players to analyze per trophy range"
     )
-    
+
     # =========================================================================
     # Global Meta Intelligence
     # =========================================================================
@@ -251,6 +317,39 @@ class Settings(BaseSettings):
         ge=600,
         description="Event rotation cache TTL (seconds)"
     )
+    cache_ttl_counter_picks: int = Field(
+        default=7200,
+        ge=1800,
+        description="Counter-pick data cache TTL (seconds)"
+    )
+
+    # =========================================================================
+    # Resilience
+    # =========================================================================
+    retry_max_attempts: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description="Maximum retry attempts for failed requests"
+    )
+    retry_base_delay: float = Field(
+        default=1.0,
+        ge=0.1,
+        le=10.0,
+        description="Base delay between retries (seconds)"
+    )
+    retry_max_delay: float = Field(
+        default=30.0,
+        ge=5.0,
+        le=120.0,
+        description="Maximum delay between retries (seconds)"
+    )
+    retry_exponential_base: float = Field(
+        default=2.0,
+        ge=1.5,
+        le=4.0,
+        description="Exponential backoff base"
+    )
 
     # =========================================================================
     # Application
@@ -260,12 +359,16 @@ class Settings(BaseSettings):
         description="Application name"
     )
     app_version: str = Field(
-        default="2.0.0",
+        default="2.1.0",
         description="Application version"
     )
     debug: bool = Field(
         default=False,
         description="Enable debug mode"
+    )
+    environment: Literal["development", "staging", "production"] = Field(
+        default="development",
+        description="Environment name"
     )
 
 
