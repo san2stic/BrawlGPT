@@ -1,0 +1,98 @@
+type: install
+version: 1.9
+id: brawlgpt-docker-compose
+name: BrawlGPT - AI Brawl Stars Coach
+categories:
+  - apps/dev-and-admin-tools
+homepage: https://github.com/san2stic/BrawlGPT
+logo: https://raw.githubusercontent.com/san2stic/BrawlGPT/main/logo.png
+description: |
+  AI-powered coaching platform for Brawl Stars players.
+  Uses Docker Compose for simple deployment.
+  
+  Tech Stack: FastAPI, React 19, PostgreSQL, Redis
+
+settings:
+  fields:
+    - type: string
+      name: brawlApiKey
+      caption: Brawl Stars API Key
+      placeholder: Get from developer.brawlstars.com
+      required: true
+      
+    - type: string
+      name: openrouterApiKey
+      caption: OpenRouter API Key  
+      placeholder: Get from openrouter.ai
+      required: true
+      inputType: password
+      
+    - type: string
+      name: jwtSecret
+      caption: JWT Secret Key (32+ chars)
+      required: true
+      inputType: password
+      default: ${fn.password(32)}
+
+nodes:
+  - nodeType: docker
+    nodeGroup: cp
+    displayName: BrawlGPT Application
+    count: 1
+    fixedCloudlets: 2
+    flexibleCloudlets: 16
+    volumes:
+      - /var/lib/postgresql/data
+      - /var/lib/redis/data
+
+onInstall:
+  - log: "Cloning BrawlGPT repository..."
+  - cmd[cp]: |-
+      cd /root
+      git clone https://github.com/san2stic/BrawlGPT.git
+      cd BrawlGPT
+  
+  - log: "Creating .env file..."
+  - cmd[cp]: |-
+      cd /root/BrawlGPT/backend
+      cat > .env <<EOF
+      BRAWL_API_KEY=${settings.brawlApiKey}
+      OPENROUTER_API_KEY=${settings.openrouterApiKey}
+      SECRET_KEY=${settings.jwtSecret}
+      DATABASE_URL=postgresql+asyncpg://brawl_user:brawl_password@postgres:5432/brawlgpt_db
+      REDIS_URL=redis://redis:6379/0
+      ALLOWED_ORIGINS=https://${env.domain},http://${env.domain}
+      LOG_LEVEL=INFO
+      DEBUG=false
+      EOF
+  
+  - log: "Starting Docker Compose..."
+  - cmd[cp]: |-
+      cd /root/BrawlGPT
+      docker-compose up -d --build
+  
+  - log: "Waiting for services to start..."
+  - sleep: 30000
+  
+  - log: "BrawlGPT deployed successfully!"
+
+success: |
+  # 🎮 BrawlGPT Deployed!
+  
+  Your application is starting up...
+  
+  ## Access
+  - **URL**: http://${env.domain}:3000
+  - **API**: http://${env.domain}:8000
+  - **Docs**: http://${env.domain}:8000/docs
+  
+  ## Services
+  - Frontend: Port 3000
+  - Backend: Port 8000  
+  - PostgreSQL: Port 5432
+  - Redis: Port 6379
+  
+  **Note**: It may take 2-3 minutes for all services to fully start.
+  
+  ## Support
+  - GitHub: https://github.com/san2stic/BrawlGPT
