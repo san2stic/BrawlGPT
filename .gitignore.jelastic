@@ -1,0 +1,14 @@
+# Jelastic Deployment Files
+# These files should not be committed to Git as they may contain sensitive information
+# The manifest.jps is safe to commit as it uses environment variables
+
+# Local test environment files (if you create them)
+.env.jelastic
+jelastic-test/
+
+# Jelastic CLI configuration (if you use it)
+.jelastic/
+
+# Deployment logs
+deploy-*.log
+jelastic-deployment.log
