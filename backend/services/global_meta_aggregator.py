@@ -27,7 +27,7 @@ class GlobalMetaAggregatorService:
     to provide a unified global view of the game meta.
     """
 
-    def __init__(self, ai_analyst: MetaAnalyst, interval_minutes: int = 60):
+    def __init__(self, ai_analyst: MetaAnalyst, interval_minutes: int = 10):
         """
         Initialize the global meta aggregator.
 

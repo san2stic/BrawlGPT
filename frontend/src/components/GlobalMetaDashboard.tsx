@@ -55,8 +55,8 @@ const GlobalMetaDashboard: React.FC = () => {
     useEffect(() => {
         fetchAllData();
 
-        // Refresh every 5 minutes
-        const interval = setInterval(fetchAllData, 5 * 60 * 1000);
+        // Refresh every 1 minute for near real-time updates
+        const interval = setInterval(fetchAllData, 1 * 60 * 1000);
         return () => clearInterval(interval);
     }, []);
 

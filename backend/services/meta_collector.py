@@ -34,8 +34,8 @@ class MetaCollectorService:
         (50000, 100000), # Legendary
     ]
 
-    # Default interval between collections (6 hours)
-    DEFAULT_INTERVAL_HOURS = 6
+    # Default interval between collections (30 minutes for frequent updates)
+    DEFAULT_INTERVAL_HOURS = 0.5
 
     # Maximum snapshots to keep per trophy range
     MAX_SNAPSHOTS_PER_RANGE = 10

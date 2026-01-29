@@ -1,0 +1,200 @@
+/* ========================================
+   HOME PAGE - MODERN GAMING DESIGN
+   ======================================== */
+
+.home-container {
+    min-height: 100vh;
+    background: linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary));
+    padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.home-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+/* ========================================
+   AUTH NAVIGATION
+   ======================================== */
+.auth-nav {
+    position: absolute;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    z-index: var(--z-overlay);
+}
+
+.auth-user-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.auth-links {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.auth-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-base);
+}
+
+.auth-link:hover {
+    color: var(--text-primary);
+    background: var(--accent-primary-bg);
+}
+
+.auth-link-primary {
+    background: var(--gradient-primary);
+    color: var(--text-inverse);
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+}
+
+.auth-link-primary:hover {
+    filter: brightness(1.1);
+    box-shadow: var(--glow-primary);
+}
+
+/* ========================================
+   HEADER SECTION
+   ======================================== */
+.home-header {
+    text-align: center;
+    margin-bottom: var(--spacing-3xl);
+    animation: var(--animate-fade-in-down);
+    padding-top: var(--spacing-2xl);
+}
+
+.home-title {
+    font-size: clamp(3rem, 8vw, 5rem);
+    font-weight: 900;
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 4px 20px rgba(251, 191, 36, 0.3);
+    letter-spacing: -0.03em;
+    margin-bottom: var(--spacing-sm);
+}
+
+.home-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    font-weight: 500;
+    margin-bottom: var(--spacing-lg);
+}
+
+.home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin-top: var(--spacing-xl);
+}
+
+/* ========================================
+   CONTENT SECTIONS
+   ======================================== */
+.content-section {
+    margin-bottom: var(--spacing-2xl);
+    animation: var(--animate-fade-in-up);
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+}
+
+/* Error State */
+.error-message {
+    padding: var(--spacing-lg);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-lg);
+    color: var(--accent-danger);
+    text-align: center;
+    margin: var(--spacing-lg) 0;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-3xl) var(--spacing-lg);
+    color: var(--text-secondary);
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+.empty-state-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.empty-state-description {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 968px) {
+    .home-container {
+        padding: var(--spacing-lg) var(--spacing-sm);
+    }
+
+    .home-header {
+        margin-bottom: var(--spacing-xl);
+        padding-top: var(--spacing-xl);
+    }
+
+    .home-title {
+        font-size: clamp(2.5rem, 7vw, 4rem);
+    }
+
+    .home-subtitle {
+        font-size: 1rem;
+    }
+
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .auth-nav {
+        position: static;
+        margin-bottom: var(--spacing-lg);
+        justify-content: center;
+    }
+
+    .home-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .home-content {
+        padding: var(--spacing-md);
+    }
+}

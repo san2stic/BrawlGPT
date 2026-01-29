@@ -1,0 +1,96 @@
+/* ========================================
+   PLAYER INPUT - CUSTOM STYLING
+   ======================================== */
+
+.player-input-card {
+    max-width: 500px;
+    margin: 0 auto 2rem;
+    animation: var(--animate-scale-in);
+}
+
+.player-input-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+/* Custom Input Wrapper */
+.input-wrapper-custom {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.input-label-custom {
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.input-container-custom {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-field-custom {
+    width: 100%;
+    padding: 1rem 3rem 1rem 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 2px solid var(--accent-gold);
+    border-radius: var(--radius-lg);
+    outline: none;
+    transition: all var(--transition-base);
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+}
+
+.input-field-custom::placeholder {
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+}
+
+.input-field-custom:focus {
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15), 0 0 30px rgba(251, 191, 36, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.input-icon-custom {
+    position: absolute;
+    right: 1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent-gold);
+    pointer-events: none;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+    .player-input-card {
+        margin: 0 1rem 2rem;
+    }
+
+    .input-label-custom {
+        font-size: 1rem;
+    }
+
+    .input-field-custom {
+        padding: 0.875rem 2.5rem 0.875rem 0.875rem;
+        font-size: 1rem;
+    }
+
+    .input-icon-custom {
+        font-size: 1.125rem;
+        right: 0.875rem;
+    }
+}

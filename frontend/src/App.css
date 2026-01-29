@@ -13,6 +13,12 @@
   flex-direction: column;
 }
 
+.app-main {
+  flex: 1;
+  min-height: calc(100vh - 77px);
+  background: var(--bg-primary);
+}
+
 /* ========================================
    HEADER - GLASSMORPHISM
    ======================================== */

@@ -1,6 +1,6 @@
 import React, { type ReactElement } from "react";
 import { Link } from 'react-router-dom';
-import { LogIn, UserPlus, User, CalendarDays } from 'lucide-react';
+import { LogIn, UserPlus, User, CalendarDays, Globe } from 'lucide-react';
 import PlayerInput from "../components/PlayerInput";
 import StatsCard from "../components/StatsCard";
 import TrophyChart from "../components/TrophyChart";
@@ -10,6 +10,8 @@ import ChatInterface from "../components/ChatInterface";
 import MetaAnalysis from "../components/MetaAnalysis";
 import { usePlayerData } from "../hooks/usePlayerData";
 import { useAuth } from "../context/AuthContext";
+import Button from "../components/Button";
+import './Home.css';
 
 export default function Home(): ReactElement {
     const { player, insights, loading, error, search, refresh } = usePlayerData();
@@ -31,37 +33,32 @@ export default function Home(): ReactElement {
 
 
     return (
-        <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black font-sans text-white overflow-x-hidden relative">
-            <div className="container mx-auto px-4 py-8">
+        <div className="home-container">
+            <div className="home-content">
                 {/* Auth Navigation */}
-                <div className="absolute top-4 right-4 flex gap-4">
+                <div className="auth-nav">
                     {user ? (
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <User className="w-5 h-5" />
-                                <span className="font-medium">{user.email}</span>
+                        <>
+                            <div className="auth-user-info">
+                                <User size={20} />
+                                <span>{user.email}</span>
                             </div>
-                            <button
+                            <Button
                                 onClick={logout}
-                                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
+                                variant="secondary"
+                                size="sm"
                             >
                                 Logout
-                            </button>
-                        </div>
+                            </Button>
+                        </>
                     ) : (
-                        <div className="flex gap-3">
-                            <Link
-                                to="/login"
-                                className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:text-white transition-colors"
-                            >
-                                <LogIn className="w-4 h-4" />
+                        <div className="auth-links">
+                            <Link to="/login" className="auth-link">
+                                <LogIn size={16} />
                                 Login
                             </Link>
-                            <Link
-                                to="/register"
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition-colors shadow-lg shadow-blue-900/20"
-                            >
-                                <UserPlus className="w-4 h-4" />
+                            <Link to="/register" className="auth-link auth-link-primary">
+                                <UserPlus size={16} />
                                 Register
                             </Link>
                         </div>
@@ -69,28 +66,32 @@ export default function Home(): ReactElement {
                 </div>
 
                 {/* Header */}
-                <header className="text-center mb-12 animate-fade-in-down pt-8">
-                    <h1 className="text-5xl md:text-7xl font-black bg-clip-text text-transparent bg-gradient-to-b from-yellow-400 to-orange-600 drop-shadow-sm tracking-tighter">
+                <header className="home-header">
+                    <h1 className="home-title">
                         BRAWL GPT
                     </h1>
-                    <p className="text-slate-400 mt-2 font-medium">
+                    <p className="home-subtitle">
                         Stats & Coaching propulsés par l'IA
                     </p>
-                    <div className="flex flex-wrap gap-3 justify-center mt-6">
-                        <Link
-                            to="/meta"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-lg font-bold shadow-lg shadow-purple-900/30 transition-all transform hover:scale-105"
-                        >
-                            <span className="text-xl">🌍</span>
-                            Méta Globale
+                    <div className="home-actions">
+                        <Link to="/meta">
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                icon={<Globe size={20} />}
+                            >
+                                Méta Globale
+                            </Button>
                         </Link>
                         {user && user.brawl_stars_tag && (
-                            <Link
-                                to="/schedule"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg font-bold shadow-lg shadow-blue-900/30 transition-all transform hover:scale-105"
-                            >
-                                <CalendarDays className="w-5 h-5" />
-                                Mon Planning IA
+                            <Link to="/schedule">
+                                <Button
+                                    variant="primary"
+                                    size="lg"
+                                    icon={<CalendarDays size={20} />}
+                                >
+                                    Mon Planning IA
+                                </Button>
                             </Link>
                         )}
                     </div>
