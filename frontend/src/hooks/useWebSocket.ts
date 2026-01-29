@@ -23,7 +23,18 @@ interface UseWebSocketReturn {
     removeNotification: (index: number) => void;
 }
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+// Construct WebSocket URL dynamically based on current page
+// For production: use wss:// with same domain. For dev: use env var or localhost
+const getWebSocketURL = () => {
+    if (import.meta.env.VITE_WS_URL) {
+        return import.meta.env.VITE_WS_URL;
+    }
+    // Production: use same domain as the page
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${window.location.host}`;
+};
+
+const WS_URL = getWebSocketURL();
 
 export function useWebSocket(userId: string | null): UseWebSocketReturn {
     const [notifications, setNotifications] = useState<Notification[]>([]);

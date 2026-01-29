@@ -42,7 +42,7 @@ interface GlobalMetaData {
     ai_generated_at: string | null;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 const GlobalMetaDashboard: React.FC = () => {
     const [globalMeta, setGlobalMeta] = useState<GlobalMetaData | null>(null);

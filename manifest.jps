@@ -112,8 +112,6 @@ nodes:
     count: 1
     fixedCloudlets: 1
     flexibleCloudlets: 4
-    env:
-      VITE_API_URL: https://${env.domain}
     volumes:
       - /app
     docker:
@@ -155,7 +153,7 @@ onInstall:
   - cmd[frontend]: "git clone https://github.com/san2stic/BrawlGPT.git /tmp/brawlgpt"
   
   - log: "Building frontend application..."
-  - cmd[frontend]: "cd /tmp/brawlgpt/frontend && npm ci && VITE_API_URL=https://${env.domain} npm run build"
+  - cmd[frontend]: "cd /tmp/brawlgpt/frontend && npm ci && VITE_API_URL='' npm run build"
   
   - log: "Deploying frontend to nginx..."
   - cmd[frontend]: "rm -rf /usr/share/nginx/html/* && cp -r /tmp/brawlgpt/frontend/dist/* /usr/share/nginx/html/"
@@ -239,6 +237,21 @@ onInstall:
   
   - log: "BrawlGPT installation completed!"
   - log: "Access your application at: https://${env.domain}"
+
+actions:
+  rebuildFrontend:
+    - log: "Rebuilding frontend with correct API configuration..."
+    - cmd[frontend]: |
+        cd /tmp && rm -rf brawlgpt
+        git clone https://github.com/san2stic/BrawlGPT.git /tmp/brawlgpt
+        cd /tmp/brawlgpt/frontend
+        npm ci
+        VITE_API_URL='' npm run build
+        rm -rf /usr/share/nginx/html/*
+        cp -r dist/* /usr/share/nginx/html/
+        nginx -s reload
+        cd /tmp && rm -rf brawlgpt
+    - log: "Frontend rebuilt successfully!"
 
 success: |
   # 🎮 BrawlGPT Successfully Deployed!
