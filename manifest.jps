@@ -133,57 +133,50 @@ nodes:
 onInstall:
   - log: "Starting BrawlGPT installation..."
   
+  # Wait for PostgreSQL to be ready first
+  - log: "Waiting for PostgreSQL to be ready..."
+  - sleep: 10000
+  - cmd[postgres]: "pg_isready -U brawl_user -d brawlgpt_db"
+  
   # Clone repository to backend node and install
-  - log: "Cloning and installing backend..."
-  - cmd[backend]: |
-      apt-get update
-      apt-get install -y --no-install-recommends git build-essential curl
-      git clone https://github.com/san2stic/BrawlGPT.git /app
-      cd /app/backend
-      pip install --no-cache-dir --upgrade pip
-      pip install --no-cache-dir -r requirements.txt
+  - log: "Installing git and build tools on backend..."
+  - cmd[backend]: "apt-get update && apt-get install -y --no-install-recommends git build-essential curl"
+  
+  - log: "Cloning repository to backend..."
+  - cmd[backend]: "git clone https://github.com/san2stic/BrawlGPT.git /app"
+  
+  - log: "Installing Python dependencies..."
+  - cmd[backend]: "cd /app/backend && pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt"
   
   # Clone repository to frontend node and build
-  - log: "Cloning and building frontend..."
-  - cmd[frontend]: |
-      apk add --no-cache git nodejs npm
-      git clone https://github.com/san2stic/BrawlGPT.git /tmp/brawlgpt
-      cd /tmp/brawlgpt/frontend
-      npm ci
-      VITE_API_URL=https://${env.domain} npm run build
-      
-      # Copy build to nginx html directory
-      rm -rf /usr/share/nginx/html/*
-      cp -r dist/* /usr/share/nginx/html/
-      
-      # Copy nginx config
-      cp nginx.conf /etc/nginx/conf.d/default.conf
-      
-      # Cleanup
-      cd /
-      rm -rf /tmp/brawlgpt
+  - log: "Installing git and node on frontend..."
+  - cmd[frontend]: "apk add --no-cache git nodejs npm"
   
-  # Wait for PostgreSQL to be ready
-  - log: "Waiting for PostgreSQL to be ready..."
-  - cmd[postgres]: |
-      until pg_isready -U brawl_user -d brawlgpt_db; do
-        sleep 2
-      done
+  - log: "Cloning repository to frontend..."
+  - cmd[frontend]: "git clone https://github.com/san2stic/BrawlGPT.git /tmp/brawlgpt"
+  
+  - log: "Building frontend application..."
+  - cmd[frontend]: "cd /tmp/brawlgpt/frontend && npm ci && VITE_API_URL=https://${env.domain} npm run build"
+  
+  - log: "Deploying frontend to nginx..."
+  - cmd[frontend]: "rm -rf /usr/share/nginx/html/* && cp -r /tmp/brawlgpt/frontend/dist/* /usr/share/nginx/html/"
+  
+  - log: "Configuring frontend nginx..."
+  - cmd[frontend]: "cp /tmp/brawlgpt/frontend/nginx.conf /etc/nginx/conf.d/default.conf"
+  
+  - log: "Cleaning up frontend temp files..."
+  - cmd[frontend]: "rm -rf /tmp/brawlgpt"
   
   # Start backend application
   - log: "Starting backend application..."
-  - cmd[backend]: |
-      cd /app/backend
-      nohup uvicorn main:app --host 0.0.0.0 --port 8000 > /app/backend/app.log 2>&1 &
-      sleep 5
-      echo "Backend started and running on port 8000"
+  - cmd[backend]: "cd /app/backend && nohup uvicorn main:app --host 0.0.0.0 --port 8000 > /app/backend/app.log 2>&1 &"
+  
+  - log: "Waiting for backend to start..."
+  - sleep: 5000
   
   # Start frontend nginx
   - log: "Starting frontend nginx..."
-  - cmd[frontend]: |
-      nginx -g 'daemon off;' &
-      sleep 2
-      echo "Frontend nginx started on port 80"
+  - cmd[frontend]: "nginx"
   
   # Configure Nginx reverse proxy
   - log: "Configuring Nginx reverse proxy..."
