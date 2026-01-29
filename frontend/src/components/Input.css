@@ -1,0 +1,159 @@
+/* ========================================
+   INPUT COMPONENT - FLOATING LABEL
+   ======================================== */
+
+.input-wrapper {
+    position: relative;
+    display: inline-block;
+    width: auto;
+    margin-bottom: var(--spacing-md);
+}
+
+.input-full-width {
+    width: 100%;
+}
+
+/* Input Container */
+.input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Input Field */
+.input-field {
+    width: 100%;
+    padding: 1rem;
+    font-family: var(--font-primary);
+    font-size: 1rem;
+    color: var(--text-primary);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 2px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    outline: none;
+    transition: all var(--transition-base);
+}
+
+.input-field::placeholder {
+    color: transparent;
+}
+
+.input-field:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Floating Label */
+.input-label {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 1rem;
+    pointer-events: none;
+    transition: all var(--transition-base);
+    background: transparent;
+    padding: 0 0.25rem;
+    z-index: 1;
+}
+
+.input-label-floating {
+    top: 0;
+    font-size: 0.75rem;
+    color: var(--accent-primary);
+    background: var(--bg-primary);
+    font-weight: 600;
+}
+
+.input-field:focus+.input-label,
+.input-field:not(:placeholder-shown)+.input-label {
+    top: 0;
+    font-size: 0.75rem;
+    color: var(--accent-primary);
+    background: var(--bg-primary);
+}
+
+/* Icon Positioning */
+.input-icon {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    pointer-events: none;
+    transition: color var(--transition-base);
+}
+
+.input-icon-left {
+    left: 1rem;
+}
+
+.input-icon-right {
+    right: 1rem;
+}
+
+.input-with-icon-left .input-field {
+    padding-left: 3rem;
+}
+
+.input-with-icon-left .input-label {
+    left: 3rem;
+}
+
+.input-with-icon-right .input-field {
+    padding-right: 3rem;
+}
+
+.input-field:focus~.input-icon {
+    color: var(--accent-primary);
+}
+
+/* Error State */
+.input-error .input-field {
+    border-color: var(--accent-danger);
+}
+
+.input-error .input-field:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input-error .input-label {
+    color: var(--accent-danger);
+}
+
+.input-error-message {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--accent-danger);
+    animation: var(--animate-fade-in-up);
+}
+
+/* Disabled State */
+.input-field:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-tertiary);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+    .input-field {
+        padding: 0.875rem;
+        font-size: 0.9375rem;
+    }
+
+    .input-label {
+        font-size: 0.9375rem;
+    }
+
+    .input-label-floating {
+        font-size: 0.6875rem;
+    }
+}

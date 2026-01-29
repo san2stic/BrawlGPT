@@ -1,0 +1,139 @@
+/* ========================================
+   CARD COMPONENT - GLASSMORPHISM
+   ======================================== */
+
+.card {
+    position: relative;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    transition: all var(--transition-base);
+    overflow: hidden;
+}
+
+/* Default Variant - Glass Effect */
+.card-default {
+    box-shadow: var(--shadow-md);
+}
+
+/* Elevated Variant - Strong Glass with More Shadow */
+.card-elevated {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: var(--shadow-xl);
+}
+
+/* Flat Variant - Minimal Shadow */
+.card-flat {
+    background: var(--bg-secondary);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ========================================
+   HOVER EFFECTS
+   ======================================== */
+.card-hover {
+    cursor: pointer;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-2xl);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.card-hover:active {
+    transform: translateY(-2px);
+}
+
+/* Glow Effect on Hover */
+.card-glow:hover {
+    box-shadow: var(--glow-primary);
+}
+
+/* ========================================
+   GRADIENT BORDER ANIMATION
+   ======================================== */
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--radius-xl);
+    padding: 1px;
+    background: linear-gradient(135deg,
+            transparent 0%,
+            rgba(102, 126, 234, 0.2) 50%,
+            transparent 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+    pointer-events: none;
+}
+
+.card-hover:hover::before {
+    opacity: 1;
+}
+
+/* ========================================
+   CARD HEADER
+   ======================================== */
+.card-header {
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-header h2,
+.card-header h3,
+.card-header h4 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+/* ========================================
+   CARD CONTENT
+   ======================================== */
+.card-content {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* ========================================
+   CARD FOOTER
+   ======================================== */
+.card-footer {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+    .card {
+        padding: var(--spacing-md);
+        border-radius: var(--radius-lg);
+    }
+
+    .card-hover:hover {
+        transform: translateY(-2px);
+    }
+}

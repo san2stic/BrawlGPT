@@ -1,17 +1,41 @@
+/* ========================================
+   APP LAYOUT - PREMIUM GAMING DESIGN
+   ======================================== */
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  min-height: 100vh;
+  font-family: var(--font-primary);
 }
 
-#root.app-header {
-  background-color: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-color);
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========================================
+   HEADER - GLASSMORPHISM
+   ======================================== */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border);
   padding: 1rem 2rem;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+  animation: var(--animate-fade-in-down);
 }
 
+.app-header.scrolled {
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Header Content */
 .header-content {
   max-width: 1400px;
   margin: 0 auto;
@@ -21,63 +45,217 @@
   gap: 2rem;
 }
 
+/* ========================================
+   LOGO
+   ======================================== */
+.logo {
+  text-decoration: none;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all var(--transition-base);
+  position: relative;
+}
+
+.logo h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 900;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+  transition: all var(--transition-base);
+}
+
+.logo:hover h1 {
+  filter: brightness(1.2);
+  text-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+}
+
+.logo::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-base);
+}
+
+.logo:hover::after {
+  width: 100%;
+}
+
+/* ========================================
+   NAVIGATION
+   ======================================== */
 .main-nav {
   display: flex;
-  gap: 1.5rem;
+  gap: 0.5rem;
+  align-items: center;
   flex: 1;
   justify-content: center;
 }
 
 .main-nav a {
+  position: relative;
   color: var(--text-secondary);
   text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  overflow: hidden;
 }
 
+/* Active Link Indicator */
+.main-nav a::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 80%;
+  height: 3px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  transition: transform var(--transition-base);
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+  color: var(--accent-primary);
+  background: var(--accent-primary-bg);
+}
+
+.main-nav a:hover::before,
+.main-nav a.active::before {
+  transform: translateX(-50%) scaleX(1);
+}
+
+/* Hover Glow Effect */
 .main-nav a:hover {
-  color: var(--accent-primary);
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
 }
 
-.logo {
-  text-decoration: none;
+/* ========================================
+   THEME CONTAINER
+   ======================================== */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ========================================
+   MOBILE MENU
+   ======================================== */
+.mobile-menu-button {
+  display: none;
+  background: none;
+  border: none;
   color: var(--text-primary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color var(--transition-base);
 }
 
-.logo h1 {
-  margin: 0;
-  font-size: 1.5rem;
+.mobile-menu-button:hover {
   color: var(--accent-primary);
 }
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 968px) {
+  .header-content {
+    gap: 1rem;
   }
 
-  to {
-    transform: rotate(360deg);
+  .main-nav {
+    flex: 0;
+    gap: 0.25rem;
+  }
+
+  .main-nav a {
+    padding: 0.625rem 1rem;
+    font-size: 0.9375rem;
+  }
+
+  .logo h1 {
+    font-size: 1.5rem;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+@media (max-width: 768px) {
+  .app-header {
+    padding: 1rem;
+  }
+
+  .mobile-menu-button {
+    display: block;
+  }
+
+  .main-nav {
+    position: fixed;
+    top: 77px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid var(--glass-border);
+    padding: 1rem;
+    gap: 0.5rem;
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .main-nav.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .main-nav a {
+    width: 100%;
+    text-align: center;
+  }
+
+  .logo h1 {
+    font-size: 1.25rem;
   }
 }
 
-.card {
-  padding: 2em;
+/* ========================================
+   PAGE TRANSITIONS
+   ======================================== */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(20px);
 }
 
-.read-the-docs {
-  color: #888;
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all var(--transition-base);
+}
+
+.page-transition-exit {
+  opacity: 1;
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transition: opacity var(--transition-fast);
 }
