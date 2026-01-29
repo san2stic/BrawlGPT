@@ -5,8 +5,7 @@
 
 import type { PlayerAnalysisResponse, APIError, ChatMessage, ChatResponse, Player } from "../types";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8000";
+// Using relative URLs - nginx routes /api/ to backend
 
 /**
  * Custom error class for API errors
@@ -45,7 +44,7 @@ export async function getPlayerAnalysis(
     throw new ApiError("Player tag cannot be empty", 400);
   }
 
-  const url = `${API_BASE_URL}/api/player/${cleanedTag}`;
+  const url = `/api/player/${cleanedTag}`;
 
   try {
     const response = await fetch(url, {
@@ -98,7 +97,7 @@ export async function getPlayerAnalysis(
  */
 export async function checkHealth(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/health`);
+    const response = await fetch(`/health`);
     return response.ok;
   } catch {
     return false;
@@ -114,7 +113,7 @@ export async function sendChatMessage(
   messages: ChatMessage[],
   playerContext: Player | null
 ): Promise<string> {
-  const url = `${API_BASE_URL}/api/chat`;
+  const url = `/api/chat`;
 
   try {
     const response = await fetch(url, {
@@ -156,7 +155,7 @@ export async function sendChatMessageStream(
   onComplete?: () => void,
   onError?: (error: Error) => void
 ): Promise<void> {
-  const url = `${API_BASE_URL}/api/chat/stream`;
+  const url = `/api/chat/stream`;
 
   try {
     const response = await fetch(url, {
@@ -270,7 +269,7 @@ export async function getCounterPicks(
     if (mode) params.append('mode', mode);
     params.append('top_n', topN.toString());
 
-    const url = `${API_BASE_URL}/api/counters/${encodeURIComponent(brawlerName)}${params.toString() ? '?' + params.toString() : ''}`;
+    const url = `/api/counters/${encodeURIComponent(brawlerName)}${params.toString() ? '?' + params.toString() : ''}`;
 
     const response = await fetch(url);
 
@@ -299,7 +298,7 @@ export async function analyzeEnemyTeam(
   mode?: string
 ): Promise<TeamCounterAnalysis> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/counters/team`, {
+    const response = await fetch(`/api/counters/team`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -363,7 +362,7 @@ export async function analyzeSynergy(
   mode?: string
 ): Promise<SynergyAnalysis> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/synergy/analyze`, {
+    const response = await fetch(`/api/synergy/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -401,7 +400,7 @@ export async function suggestThirdBrawler(
   topN: number = 5
 ): Promise<ThirdBrawlerResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/synergy/suggest`, {
+    const response = await fetch(`/api/synergy/suggest`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -486,7 +485,7 @@ export async function generateSchedule(
     throw new ApiError('Authentication required', 401);
   }
 
-  const url = `${API_BASE_URL}/api/schedule/generate`;
+  const url = `/api/schedule/generate`;
 
   try {
     const response = await fetch(url, {
@@ -532,7 +531,7 @@ export async function getCurrentSchedule(): Promise<Schedule | null> {
     throw new ApiError('Authentication required', 401);
   }
 
-  const url = `${API_BASE_URL}/api/schedule/current`;
+  const url = `/api/schedule/current`;
 
   try {
     const response = await fetch(url, {
@@ -569,7 +568,7 @@ export async function getAllSchedules(): Promise<Schedule[]> {
     throw new ApiError('Authentication required', 401);
   }
 
-  const url = `${API_BASE_URL}/api/schedule/all`;
+  const url = `/api/schedule/all`;
 
   try {
     const response = await fetch(url, {
@@ -606,7 +605,7 @@ export async function deleteSchedule(scheduleId: number): Promise<void> {
     throw new ApiError('Authentication required', 401);
   }
 
-  const url = `${API_BASE_URL}/api/schedule/${scheduleId}`;
+  const url = `/api/schedule/${scheduleId}`;
 
   try {
     const response = await fetch(url, {
