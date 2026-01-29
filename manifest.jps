@@ -133,10 +133,9 @@ nodes:
 onInstall:
   - log: "Starting BrawlGPT installation..."
   
-  # Wait for PostgreSQL to be ready first
-  - log: "Waiting for PostgreSQL to be ready..."
-  - sleep: 10000
-  - cmd[postgres]: "pg_isready -U brawl_user -d brawlgpt_db"
+  # Wait for PostgreSQL to be ready (give it time to start)
+  - log: "Waiting for PostgreSQL to start..."
+  - sleep: 15000
   
   # Clone repository to backend node and install
   - log: "Installing git and build tools on backend..."
