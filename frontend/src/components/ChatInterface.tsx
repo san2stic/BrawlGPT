@@ -79,97 +79,90 @@ export default function ChatInterface({ player }: ChatInterfaceProps) {
                 className={`chat-toggle-button ${isOpen ? 'chat-open' : ''}`}
             >
                 {isOpen ? (
-                    <svg className=\"chat-icon\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\">
-                <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />
-            </svg>
-            ) : (
-            <svg className=\"chat-icon\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\">
-            <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z\" />
-        </svg >
-                )
-}
-            </button >
+                    <svg className="chat-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                ) : (
+                    <svg className="chat-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                )}
+            </button>
 
-    {/* Chat Window */ }
-    < div className = {`chat-window ${isOpen ? 'chat-visible' : 'chat-hidden'}`}>
-        {/* Header */ }
-        < div className =\"chat-header\">
-            < div className =\"chat-avatar\">
-                < svg className =\"chat-icon\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\">
-                    < path strokeLinecap =\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z\" />
-                        </svg >
-                    </div >
-    <div className=\"chat-header-info\">
-        < h3 > Coach BrawlGPT</h3 >
-            <p>
-                {player ? `En attente de joueur...` : 'En attente de joueur...'}
-            </p>
-                    </div >
-                </div >
+            {/* Chat Window */}
+            <div className={`chat-window ${isOpen ? 'chat-visible' : 'chat-hidden'}`}>
+                {/* Header */}
+                <div className="chat-header">
+                    <div className="chat-avatar">
+                        <svg className="chat-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div className="chat-header-info">
+                        <h3>Coach BrawlGPT</h3>
+                        <p>
+                            {player ? `Connecté avec ${player.name}` : 'En attente de joueur...'}
+                        </p>
+                    </div>
+                </div>
 
-    {/* Messages */ }
-    < div className =\"chat-messages\">
-{
-    messages.length === 0 && (
-        <div className=\"chat-empty-state\">
-            <p>👋 Bonjour! Je suis votre coach IA.</p >
-                <p>Posez-moi des questions sur vos brawlers, vos stats ou des stratégies !</p>
-                        </div >
-                    )
-}
+                {/* Messages */}
+                <div className="chat-messages">
+                    {messages.length === 0 && (
+                        <div className="chat-empty-state">
+                            <p>👋 Bonjour ! Je suis votre coach IA.</p>
+                            <p>Posez-moi des questions sur vos brawlers, vos stats ou des stratégies !</p>
+                        </div>
+                    )}
 
-{
-    messages.map((msg, idx) => (
-        <div
-            key={idx}
-            className={`message-wrapper message-${msg.role}`}
-        >
-            <div className=\"message-bubble\">
-            {msg.content}
-        </div>
-                        </div >
-                    ))
-}
-{
-    isLoading && (
-        <div className=\"message-wrapper message-assistant\">
-            < div className =\"message-bubble\">
-                < div className =\"chat-loading\">
-                    < span className =\"chat-loading-dot\"></span>
-                        < span className =\"chat-loading-dot\"></span>
-                            < span className =\"chat-loading-dot\"></span>
-                                </div >
-                            </div >
-                        </div >
-                    )
-}
-<div ref={messagesEndRef} />
-                </div >
+                    {messages.map((msg, idx) => (
+                        <div
+                            key={idx}
+                            className={`message-wrapper message-${msg.role}`}
+                        >
+                            <div className="message-bubble">
+                                {msg.content}
+                            </div>
+                        </div>
+                    ))}
+                    {isLoading && (
+                        <div className="message-wrapper message-assistant">
+                            <div className="message-bubble">
+                                <div className="chat-loading">
+                                    <span className="chat-loading-dot"></span>
+                                    <span className="chat-loading-dot"></span>
+                                    <span className="chat-loading-dot"></span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
 
-    {/* Input */ }
-    < div className =\"chat-input-container\">
-        < div className =\"chat-input-wrapper\">
-            < input
-type =\"text\"
-value = { inputValue }
-onChange = {(e) => setInputValue(e.target.value)}
-onKeyDown = { handleKeyPress }
-placeholder =\"Posez votre question...\"
-className =\"chat-input\"
-disabled = { isLoading }
-    />
-    <button
-        onClick={handleSend}
-        disabled={!inputValue.trim() || isLoading}
-        className=\"chat-send-button\"
-            >
-            <svg className=\"chat-send-icon\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\">
-                < path strokeLinecap =\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M12 19l9 2-9-18-9 18 9-2zm0 0v-8\" />
-                            </svg >
-                        </button >
-                    </div >
-                </div >
-            </div >
+                {/* Input */}
+                <div className="chat-input-container">
+                    <div className="chat-input-wrapper">
+                        <input
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={handleKeyPress}
+                            placeholder="Posez votre question..."
+                            className="chat-input"
+                            disabled={isLoading}
+                        />
+                        <button
+                            onClick={handleSend}
+                            disabled={!inputValue.trim() || isLoading}
+                            className="chat-send-button"
+                        >
+                            <svg className="chat-send-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </>
     );
 }
