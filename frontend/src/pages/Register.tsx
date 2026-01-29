@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Using relative URLs - nginx routes /api/ to backend
 
 export default function Register() {
     const [email, setEmail] = useState('');
@@ -17,7 +17,7 @@ export default function Register() {
         setLoading(true);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+            const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
