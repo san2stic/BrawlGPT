@@ -6,8 +6,8 @@ categories:
   - apps/dev-and-admin-tools
   - apps/popular
   - apps/content-management
-homepage: https://github.com/yourusername/BrawlGPT
-logo: https://raw.githubusercontent.com/yourusername/BrawlGPT/main/logo.png
+homepage: https://github.com/san2stic/BrawlGPT
+logo: https://raw.githubusercontent.com/san2stic/BrawlGPT/main/logo.png
 description: |
   AI-powered coaching and statistics platform for Brawl Stars players.
   
@@ -20,7 +20,7 @@ description: |
   
   Tech Stack: FastAPI, React 19, PostgreSQL, Redis
 
-baseUrl: https://raw.githubusercontent.com/yourusername/BrawlGPT/main
+baseUrl: https://raw.githubusercontent.com/san2stic/BrawlGPT/main
 
 settings:
   fields:
@@ -247,7 +247,7 @@ success: |
   - JWT Secret: Auto-generated ✓
   
   ## Support
-  - Documentation: https://github.com/yourusername/BrawlGPT
-  - Issues: https://github.com/yourusername/BrawlGPT/issues
+  - Documentation: https://github.com/san2stic/BrawlGPT
+  - Issues: https://github.com/san2stic/BrawlGPT/issues
   
   Enjoy your BrawlGPT experience! 🚀
