@@ -1,5 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 interface User {
     id: number;
     email: string;
@@ -31,7 +33,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const fetchUser = async (authToken: string) => {
         try {
-            const response = await fetch('http://localhost:8000/api/auth/me', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`
                 }
@@ -65,7 +67,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const claimProfile = async (tag: string) => {
         if (!token) return;
         try {
-            const response = await fetch(`http://localhost:8000/api/auth/claim/${encodeURIComponent(tag)}`, {
+            const response = await fetch(`${API_BASE_URL}/api/auth/claim/${encodeURIComponent(tag)}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`

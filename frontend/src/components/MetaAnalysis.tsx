@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Brain, Sparkles, Loader2, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 interface MetaReport {
     most_popular_brawlers: { name: string; count: number; frequency: string }[];
     analyzed_matches: number;
@@ -27,7 +30,7 @@ export default function MetaAnalysis({ playerTag }: { playerTag: string }) {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`http://localhost:8000/api/crawler/analyze/${encodeURIComponent(playerTag)}`, {
+            const response = await fetch(`${API_BASE_URL}/api/crawler/analyze/${encodeURIComponent(playerTag)}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

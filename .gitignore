@@ -5,7 +5,7 @@
 .env.local
 .env.*.local
 !.env.example
-
+.env.production
 # Python
 __pycache__/
 *.py[cod]
