@@ -28,8 +28,11 @@ Avant de commencer, assurez-vous d'avoir:
 2. **Importer le Manifest**
    - Cliquez sur "Import" en haut à droite
    - Sélectionnez l'onglet "Local file" ou "URL"
-   - Si URL: collez le lien vers votre `manifest.jps` (exemple: `https://raw.githubusercontent.com/VOTRE_USER/BrawlGPT/main/manifest.jps`)
+   - Si URL: collez le lien vers votre `manifest.jps` (exemple: `https://raw.githubusercontent.com/san2stic/BrawlGPT/main/manifest.jps`)
    - Si fichier local: uploadez le fichier `manifest.jps`
+
+> [!NOTE]
+> Le déploiement clone automatiquement le dépôt GitHub et build les applications. Cela peut prendre 5-10 minutes.
 
 3. **Configuration**
    Remplissez le formulaire avec vos informations:
@@ -43,7 +46,12 @@ Avant de commencer, assurez-vous d'avoir:
 
 4. **Lancer le déploiement**
    - Cliquez sur "Install"
-   - Attendez quelques minutes pendant que Jelastic configure l'environnement
+   - Attendez 5-10 minutes pendant que Jelastic:
+     1. Provisionne les nœuds
+     2. Clone le dépôt GitHub
+     3. Installe les dépendances backend (pip)
+     4. Build le frontend (npm)
+     5. Configure et démarre les services
    - Une fois terminé, vous recevrez l'URL d'accès
 
 ### Méthode 2: Déploiement Manuel via Docker Compose

@@ -20,8 +20,6 @@ description: |
   
   Tech Stack: FastAPI, React 19, PostgreSQL, Redis
 
-baseUrl: https://raw.githubusercontent.com/san2stic/BrawlGPT/main
-
 settings:
   fields:
     - type: string
@@ -98,19 +96,13 @@ nodes:
       DATABASE_URL: postgresql+asyncpg://brawl_user:${nodes.postgres.env.POSTGRES_PASSWORD}@${nodes.postgres.address}:5432/brawlgpt_db
       REDIS_URL: redis://${nodes.redis.address}:6379/0
       ALLOWED_ORIGINS: https://${env.domain},http://${env.domain}
-      LOG_level: INFO
+      LOG_LEVEL: INFO
       DEBUG: false
     volumes:
-      - /app/logs
+      - /app
     docker:
       image: python:3.12-slim
-      volumes:
-        - ${baseUrl}/backend:/app
-      cmd: |
-        sh -c "cd /app && \
-        apt-get update && apt-get install -y --no-install-recommends build-essential && \
-        pip install --no-cache-dir -r requirements.txt && \
-        uvicorn main:app --host 0.0.0.0 --port 8000"
+      cmd: sleep infinity
     restart: always
 
   # Frontend
@@ -122,16 +114,11 @@ nodes:
     flexibleCloudlets: 4
     env:
       VITE_API_URL: https://${env.domain}
+    volumes:
+      - /app
     docker:
-      image: node:20-alpine
-      volumes:
-        - ${baseUrl}/frontend:/app
-      cmd: |
-        sh -c "cd /app && \
-        npm ci && \
-        npm run build && \
-        npm install -g serve && \
-        serve -s dist -l 80"
+      image: nginx:alpine
+      cmd: sleep infinity
     restart: always
 
   # Nginx Reverse Proxy
@@ -146,18 +133,59 @@ nodes:
 onInstall:
   - log: "Starting BrawlGPT installation..."
   
+  # Clone repository to backend node and install
+  - log: "Cloning and installing backend..."
+  - cmd[backend]: |
+      apt-get update
+      apt-get install -y --no-install-recommends git build-essential curl
+      git clone https://github.com/san2stic/BrawlGPT.git /app
+      cd /app/backend
+      pip install --no-cache-dir --upgrade pip
+      pip install --no-cache-dir -r requirements.txt
+  
+  # Clone repository to frontend node and build
+  - log: "Cloning and building frontend..."
+  - cmd[frontend]: |
+      apk add --no-cache git nodejs npm
+      git clone https://github.com/san2stic/BrawlGPT.git /tmp/brawlgpt
+      cd /tmp/brawlgpt/frontend
+      npm ci
+      VITE_API_URL=https://${env.domain} npm run build
+      
+      # Copy build to nginx html directory
+      rm -rf /usr/share/nginx/html/*
+      cp -r dist/* /usr/share/nginx/html/
+      
+      # Copy nginx config
+      cp nginx.conf /etc/nginx/conf.d/default.conf
+      
+      # Cleanup
+      cd /
+      rm -rf /tmp/brawlgpt
+  
+  # Wait for PostgreSQL to be ready
   - log: "Waiting for PostgreSQL to be ready..."
   - cmd[postgres]: |
       until pg_isready -U brawl_user -d brawlgpt_db; do
         sleep 2
       done
   
-  - log: "Initializing database schema..."
+  # Start backend application
+  - log: "Starting backend application..."
   - cmd[backend]: |
-      cd /app
-      # Database migrations will run automatically on app startup
-      echo "Database will be initialized on backend startup"
+      cd /app/backend
+      nohup uvicorn main:app --host 0.0.0.0 --port 8000 > /app/backend/app.log 2>&1 &
+      sleep 5
+      echo "Backend started and running on port 8000"
   
+  # Start frontend nginx
+  - log: "Starting frontend nginx..."
+  - cmd[frontend]: |
+      nginx -g 'daemon off;' &
+      sleep 2
+      echo "Frontend nginx started on port 80"
+  
+  # Configure Nginx reverse proxy
   - log: "Configuring Nginx reverse proxy..."
   - cmd[nginx]: |
       cat > /etc/nginx/conf.d/brawlgpt.conf <<'EOF'
@@ -210,6 +238,7 @@ onInstall:
       EOF
       nginx -s reload
   
+  # Configure custom domain SSL if provided
   - if (${settings.customDomain:}):
       - api: environment.binder.BindSSL
         envName: ${env.name}
