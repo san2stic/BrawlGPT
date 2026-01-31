@@ -33,7 +33,7 @@ class BrawlStarsClient:
             "Authorization": f"Bearer {self.api_key}",
             "Accept": "application/json"
         }
-        self.timeout = 10  # seconds
+        self.timeout = 30  # seconds
 
     @staticmethod
     def validate_tag(tag: str) -> str:
