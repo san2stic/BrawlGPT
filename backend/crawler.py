@@ -104,6 +104,16 @@ class SmartBattleCrawler:
         (30000, 50000),
         (50000, 100000),
     ]
+    
+    # Mapping for internal/beta brawler names to display names or cleanup
+    BRAWLER_NAME_MAPPING = {
+        "Trunk": "Unknown (Beta)",
+        "Pierce": "Unknown (Beta)",
+        "Alli": "Unknown (Beta)",
+        "Gigi": "Unknown (Beta)",
+        "Hook": "Gene",  # Example of known internal names
+        "Sniper": "Bea",
+    }
 
     def __init__(self, client: BrawlStarsClient):
         self.client = client
@@ -327,6 +337,11 @@ class SmartBattleCrawler:
                         brawler_name = brawler.get("name", "Unknown")
                         brawler_id = brawler.get("id", 0)
 
+
+                        # Normalize name
+                        if brawler_name in self.BRAWLER_NAME_MAPPING:
+                            brawler_name = self.BRAWLER_NAME_MAPPING[brawler_name]
+
                         if brawler_name not in brawler_stats:
                             brawler_stats[brawler_name] = BrawlerPerformance(
                                 brawler_id=brawler_id,
@@ -363,6 +378,10 @@ class SmartBattleCrawler:
                     # Discover teammates
                     if p_tag and p_tag != player_tag:
                         discovered_players.add(p_tag)
+                    
+                    # Normalize name
+                    if brawler_name in self.BRAWLER_NAME_MAPPING:
+                        brawler_name = self.BRAWLER_NAME_MAPPING[brawler_name]
 
                     if brawler_name not in brawler_stats:
                         brawler_stats[brawler_name] = BrawlerPerformance(

@@ -166,15 +166,15 @@ class Settings(BaseSettings):
     # Meta Crawler
     # =========================================================================
     meta_collection_interval_hours: int = Field(
-        default=6,
+        default=2,
         ge=1,
         le=24,
         description="Hours between meta collection runs"
     )
     meta_max_players_per_range: int = Field(
-        default=100,
+        default=500,
         ge=10,
-        le=500,
+        le=2000,
         description="Maximum players to analyze per trophy range"
     )
     
@@ -182,7 +182,7 @@ class Settings(BaseSettings):
     # Global Meta Intelligence
     # =========================================================================
     global_meta_interval_minutes: int = Field(
-        default=60,
+        default=30,
         ge=15,
         le=360,
         description="Minutes between global meta aggregation runs"
