@@ -7,11 +7,11 @@ import type { TrophyChartProps, BrawlerStats } from "../types";
 
 /** Get color based on trophy count */
 function getTrophyColor(trophies: number): string {
-  if (trophies >= 750) return "bg-gradient-to-r from-purple-500 to-pink-500";
-  if (trophies >= 500) return "bg-gradient-to-r from-yellow-500 to-orange-500";
-  if (trophies >= 300) return "bg-gradient-to-r from-blue-500 to-cyan-500";
-  if (trophies >= 100) return "bg-gradient-to-r from-green-500 to-emerald-500";
-  return "bg-gradient-to-r from-slate-500 to-slate-400";
+  if (trophies >= 1000) return "bg-gradient-to-r from-red-500 to-rose-600 shadow-[0_0_15px_rgba(244,63,94,0.5)]";
+  if (trophies >= 750) return "bg-gradient-to-r from-purple-500 to-pink-500 shadow-[0_0_10px_rgba(168,85,247,0.4)]";
+  if (trophies >= 500) return "bg-gradient-to-r from-green-500 to-emerald-400";
+  if (trophies >= 300) return "bg-gradient-to-r from-blue-500 to-cyan-400";
+  return "bg-gradient-to-r from-slate-600 to-slate-500";
 }
 
 /** Get rank badge color */

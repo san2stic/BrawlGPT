@@ -56,9 +56,27 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ playerTag }) => {
         fetchData();
     }, [playerTag]);
 
-    if (loading) return <div className="p-8 text-center text-gray-400 animate-pulse">Analysing battle history...</div>;
-    if (error) return <div className="p-8 text-center text-red-400">{error}</div>;
-    if (!data || data.teammates.length === 0) return <div className="p-8 text-center text-gray-400">No team history found in recent battles.</div>;
+    if (loading) {
+        return (
+            <div className="bg-gray-800 rounded-xl p-8 mt-6 border border-gray-700 shadow-lg flex flex-col items-center justify-center min-h-[400px]">
+                <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <div className="text-purple-300 font-medium animate-pulse">Analyzing battle history...</div>
+            </div>
+        );
+    }
+
+    if (error || !data || data.teammates.length === 0) {
+        return (
+            <div className="bg-gray-800 rounded-xl p-8 mt-6 border border-gray-700 shadow-lg flex flex-col items-center justify-center min-h-[300px] text-center">
+                <div className="text-4xl mb-4">🤝</div>
+                <h3 className="text-xl font-bold text-gray-200 mb-2">No Interaction Data Found</h3>
+                <p className="text-gray-400 max-w-md">
+                    We couldn't find any significant team history in your recent battles.
+                    Play some 3v3 games to see your network graph here!
+                </p>
+            </div>
+        );
+    }
 
     // --- Graph Layout Calculation ---
     // We place the main player in the center, and teammates in a circle around.

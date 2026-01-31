@@ -26,8 +26,11 @@ class PlayerAnalyzer:
         my_tag = player_tag.upper().replace("#", "")
 
         for battle_record in battles:
-            battle = battle_record.get('battle', {})
-            event = battle_record.get('event', {})
+            if not isinstance(battle_record, dict):
+                continue
+                
+            battle = battle_record.get('battle', {}) or {}
+            event = battle_record.get('event', {}) or {}
             mode = event.get('mode')
             result = battle.get('result') # victory, defeat, draw
             
@@ -36,9 +39,19 @@ class PlayerAnalyzer:
             # Extract "My Team"
             if 'teams' in battle:
                 # 3v3 or Duo Showdown
-                for team in battle['teams']:
+                teams = battle.get('teams', [])
+                if not isinstance(teams, list):
+                    continue
+                    
+                for team in teams:
+                    if not isinstance(team, list):
+                        continue
+                        
                     is_my_team = False
                     for p in team:
+                        if not isinstance(p, dict) or 'tag' not in p:
+                            continue
+                            
                         p_tag = p['tag'].upper().replace("#", "")
                         if p_tag == my_tag:
                             is_my_team = True
@@ -53,6 +66,9 @@ class PlayerAnalyzer:
 
             # Process Teammates in My Team
             for p in my_team:
+                if not isinstance(p, dict) or 'tag' not in p or 'name' not in p:
+                    continue
+                    
                 p_tag = p['tag'].upper().replace("#", "")
                 
                 # Skip self
