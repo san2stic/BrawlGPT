@@ -330,7 +330,6 @@ Formate ta réponse en Markdown propre avec des en-têtes. RÉPONDS UNIQUEMENT E
                     {"role": "system", "content": SYSTEM_PROMPT_ANALYSIS},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=4000,
                 temperature=0.7
             )
 
@@ -554,7 +553,6 @@ Formate ta réponse en Markdown propre avec des en-têtes. RÉPONDS UNIQUEMENT E
                     messages=api_messages,
                     tools=AGENT_TOOLS,
                     tool_choice="auto",
-                    max_tokens=2000,
                     temperature=0.7
                 )
 
@@ -602,7 +600,6 @@ Formate ta réponse en Markdown propre avec des en-têtes. RÉPONDS UNIQUEMENT E
                     response = await self.client.chat.completions.create(
                         model=self.model,
                         messages=api_messages,
-                        max_tokens=2000,
                         temperature=0.7
                     )
 
@@ -613,7 +610,6 @@ Formate ta réponse en Markdown propre avec des en-têtes. RÉPONDS UNIQUEMENT E
                 response = await self.client.chat.completions.create(
                     model=self.model,
                     messages=api_messages,
-                    max_tokens=2000,
                     temperature=0.7
                 )
                 response_text = response.choices[0].message.content
@@ -768,7 +764,6 @@ RÉPONDS UNIQUEMENT AVEC LE JSON, RIEN D'AUTRE."""
                     {"role": "system", "content": "Tu es un expert coach de Brawl Stars. Génère UNIQUEMENT du JSON valide, rien d'autre."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=6000,
                 temperature=0.8,  # Slightly higher for creative scheduling
                 response_format={"type": "json_object"}  # Enforce JSON response
             )

@@ -47,8 +47,7 @@ class MetaAnalyst:
                 messages=[
                     {"role": "system", "content": "Tu es une IA tactique avancée pour Brawl Stars using Google Gemini Flash. Tu analyses la meta."},
                     {"role": "user", "content": prompt}
-                ],
-                max_tokens=1000
+                ]
             )
             return response.choices[0].message.content
         except Exception as e:
@@ -101,8 +100,7 @@ class MetaAnalyst:
                         "content": "Tu es un analyste méta expert de Brawl Stars. Tu fournis des insights basés sur des données réelles de milliers de parties."
                     },
                     {"role": "user", "content": prompt}
-                ],
-                max_tokens=2000
+                ]
             )
             
             if not response or not response.choices:
@@ -155,8 +153,7 @@ class MetaAnalyst:
                         "content": "Tu es un analyste expert des tendances méta de Brawl Stars."
                     },
                     {"role": "user", "content": prompt}
-                ],
-                max_tokens=1500
+                ]
             )
             
             # Split response into individual insights
@@ -206,8 +203,7 @@ class MetaAnalyst:
                         "content": "Tu es un coach tactique expert de Brawl Stars spécialisé dans les synergies d'équipe."
                     },
                     {"role": "user", "content": prompt}
-                ],
-                max_tokens=1500
+                ]
             )
             return response.choices[0].message.content
         except Exception as e:
