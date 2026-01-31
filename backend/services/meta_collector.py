@@ -38,13 +38,13 @@ class MetaCollectorService:
     DEFAULT_INTERVAL_HOURS = 0.5
 
     # Maximum snapshots to keep per trophy range
-    MAX_SNAPSHOTS_PER_RANGE = 10
+    MAX_SNAPSHOTS_PER_RANGE = 20
 
     def __init__(
         self,
         brawl_client: BrawlStarsClient,
         interval_hours: int = DEFAULT_INTERVAL_HOURS,
-        max_players_per_range: int = 100
+        max_players_per_range: int = 500
     ):
         """
         Initialize the meta collector service.
@@ -144,7 +144,7 @@ class MetaCollectorService:
         await self.crawler.crawl_meta(
             seed_players=seed_players,
             trophy_range=trophy_range,
-            depth=2,
+            depth=3,
             max_players=self.max_players_per_range,
             db=db
         )

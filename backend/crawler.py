@@ -297,7 +297,7 @@ class SmartBattleCrawler:
         """
         Analyze a player's battles and update statistics.
 
-        Returns set of teammate tags discovered.
+        Returns set of other players discovered (teammates and opponents).
         """
         discovered_players: set[str] = set()
 
@@ -327,16 +327,27 @@ class SmartBattleCrawler:
                         my_team = team
                     else:
                         opponent_team = team
+                
+                # Discover opponents (WIDE NET)
+                for p in opponent_team:
+                    p_tag = p.get("tag", "").upper().replace("#", "")
+                    if p_tag:
+                        discovered_players.add(p_tag)
 
             elif "players" in battle:
                 # Solo/Duo Showdown - different logic
-                # For Showdown, we can only analyze the player's own brawler
+                # For Showdown, we can only analyze the player's own brawler stats-wise
+                # BUT we can discover other players!
                 for p in battle["players"]:
-                    if p.get("tag", "").upper().replace("#", "") == player_tag:
+                    p_tag = p.get("tag", "").upper().replace("#", "")
+                    
+                    if p_tag and p_tag != player_tag:
+                        discovered_players.add(p_tag)
+
+                    if p_tag == player_tag:
                         brawler = p.get("brawler", {})
                         brawler_name = brawler.get("name", "Unknown")
                         brawler_id = brawler.get("id", 0)
-
 
                         # Normalize name
                         if brawler_name in self.BRAWLER_NAME_MAPPING:
